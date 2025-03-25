@@ -1,0 +1,39 @@
+# Python-specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Dependency files (if managed manually)
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Logs and runtime files
+*.log
+*.pid
+*.seed
+*.pickle
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS-specific
+.DS_Store
+
+# Models directory (optional, if you don’t want to commit large .h5 files)
+models/*.h5
+
+# Miscellaneous
+*.bak
+*.swp
+*~
