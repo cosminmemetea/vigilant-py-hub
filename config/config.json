@@ -1,0 +1,9 @@
+{
+  "mediapipe": {
+      "max_num_faces": 1,
+      "refine_landmarks": true,
+      "min_detection_confidence": 0.6,
+      "min_tracking_confidence": 0.6
+  },
+  "kpis": ["yaw", "pitch", "roll", "tilt", "yawn", "adult", "belt"]
+}
