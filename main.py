@@ -15,15 +15,11 @@ class MainApp(QApplication):
         self.mode = "Live"
         self.cap = cv2.VideoCapture(0)
         self.static_image = None
-        self.static_frame = None
-        self.static_data = None
 
-        # Timer pentru Live
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_live)
         self.timer.start(10)  # 10ms ~ 100 FPS
 
-        # Conectăm butoanele
         self.ui.toggle_button.clicked.connect(self.toggle_mode)
         self.ui.load_button.clicked.connect(self.load_image)
         self.ui.analyze_button.clicked.connect(self.analyze_image)
@@ -52,8 +48,6 @@ class MainApp(QApplication):
             self.ui.load_button.setVisible(True)
             self.ui.analyze_button.setVisible(False)
             self.static_image = None
-            self.static_frame = None
-            self.static_data = None
             no_image_frame = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.putText(no_image_frame, "No Image Loaded", (150, 240), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             self.ui.update_frame(no_image_frame)
@@ -72,18 +66,20 @@ class MainApp(QApplication):
                 frame = cv2.imread(image_path)
                 if frame is not None:
                     self.static_image = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
-                    self.static_frame = self.static_image.copy()
-                    self.static_data = self.face_detector.empty_data()
-                    self.ui.update_frame(self.static_frame)
-                    self.ui.update_data(self.static_data)
-                    self.ui.analyze_button.setVisible(True)
+                    self.ui.update_frame(self.static_image)  
+                    self.ui.update_data(self.face_detector.empty_data())  
+                    self.ui.analyze_button.setVisible(True)  
 
     def analyze_image(self):
         if self.mode == "Static" and self.static_image is not None:
-            self.static_frame, self.static_data = self.face_detector.process_frame(self.static_image)
-            self.ui.update_frame(self.static_frame)
-            self.ui.update_data(self.static_data)
-            self.ui.analyze_button.setVisible(False)
+            try:
+                processed_frame, processed_data = self.face_detector.process_frame(self.static_image)
+                self.ui.update_frame(processed_frame)
+                self.ui.update_data(processed_data)
+                self.ui.analyze_button.setVisible(False) 
+            except Exception as e:
+                print(f"Error in analyze_image: {e}")
+                self.ui.update_data(self.face_detector.empty_data())
 
     def closeEvent(self, event):
         self.timer.stop()
