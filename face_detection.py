@@ -37,7 +37,6 @@ class FaceDetector:
                 h, w, _ = frame.shape
                 landmarks = [(lm.x * w, lm.y * h, lm.z * w) for lm in face_landmarks.landmark]
 
-                # Head pose
                 nose = landmarks[1]
                 left_eye = landmarks[33]
                 right_eye = landmarks[263]
@@ -47,7 +46,6 @@ class FaceDetector:
 
                 data["Tilting"] = self.get_tilting(data["Roll"])
                 data["Looking"] = self.get_looking(data["Pitch"], data["Yaw"])
-
                 data["Blink"] = self.detect_blink(landmarks)
                 data["Yawn"] = self.detect_yawn(landmarks)
 
@@ -68,7 +66,7 @@ class FaceDetector:
 
     def get_tilting(self, roll):
         roll = float(roll)
-        if roll > 8:  
+        if roll > 8:
             return "Right"
         elif roll < -8:
             return "Left"
@@ -76,7 +74,7 @@ class FaceDetector:
 
     def get_looking(self, pitch, yaw):
         pitch, yaw = float(pitch), float(yaw)
-        if pitch > 10:  
+        if pitch > 10:
             return "Down"
         elif pitch < -10:
             return "Up"
@@ -93,13 +91,15 @@ class FaceDetector:
         right_eye_bottom = landmarks[374][1]
         left_dist = left_eye_bottom - left_eye_top
         right_dist = right_eye_bottom - right_eye_top
-        return "Yes" if (left_dist < 3 or right_dist < 3) else "No" 
+        return "Yes" if (left_dist < 3 or right_dist < 3) else "No"
 
     def detect_yawn(self, landmarks):
         mouth_top = landmarks[13][1]
         mouth_bottom = landmarks[14][1]
         mouth_dist = mouth_bottom - mouth_top
-        return "Yes" if mouth_dist > 25 else "No"  
+        return "Yes" if mouth_dist > 25 else "No"
 
     def close(self):
-        self.face_mesh.close()
+        if self.face_mesh is not None:
+            self.face_mesh.close()
+            self.face_mesh = None
