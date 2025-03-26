@@ -77,11 +77,11 @@ class AdultCalculator(KpiCalculator):
         return "adult"
     
     def calculate(self, landmarks, image_size) -> str:
-        return "Adult" if landmarks is not None else "Unknown"
+        return "1" if landmarks is not None else "Unknown"
 
 class BeltCalculator(KpiCalculator):
     def name(self) -> str:
         return "belt"
     
     def calculate(self, landmarks, image_size) -> str:
-        return "No Belt Detected"
+        return "0"
