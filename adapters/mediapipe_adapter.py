@@ -1,4 +1,4 @@
-#adapters/mediapipe_adapter.py
+# adapters/mediapipe_adapter.py
 import mediapipe as mp
 
 class MediaPipeAdapter:
@@ -9,6 +9,7 @@ class MediaPipeAdapter:
         :param config: Dictionary with configuration parameters.
         """
         config = config or {}
+        print(f"Initializing MediaPipeAdapter with mode: {mode}")
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(
             static_image_mode=(mode == "static"),
             max_num_faces=config.get("max_num_faces", 1),
@@ -23,7 +24,10 @@ class MediaPipeAdapter:
         :param image: RGB image (as a NumPy array)
         :return: The first detected face landmarks or None.
         """
+        print("Processing image with MediaPipe...")
         results = self.face_mesh.process(image)
         if results.multi_face_landmarks:
+            print(f"Detected {len(results.multi_face_landmarks)} faces")
             return results.multi_face_landmarks[0]
+        print("No faces detected")
         return None

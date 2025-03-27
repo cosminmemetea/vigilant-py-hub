@@ -12,16 +12,18 @@ class FrameProcessor:
 
     def process_frame(self, frame: np.ndarray) -> dict:
         try:
+            print("Starting frame processing...")
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            image_size = (frame.shape[1], frame.shape[0])  # (width, height)
+            image_size = (frame.shape[1], frame.shape[0])
             landmarks = self.mediapipe_adapter.process(rgb_frame)
             if landmarks is not None:
+                print(f"Landmarks detected: {len(landmarks.landmark)} landmarks")
                 results = self.kpi_manager.calculate_all(landmarks, image_size)
-                logger.debug(f"Processed frame results: {results}")
+                print(f"Processed frame results: {results}")
                 return results
             else:
-                logger.warning("No landmarks detected in frame")
+                print("No landmarks detected in frame")
                 return {}
         except Exception as e:
-            logger.error(f"Error processing frame: {e}")
+            print(f"Error processing frame: {e}")
             return {}

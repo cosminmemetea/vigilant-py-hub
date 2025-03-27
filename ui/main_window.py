@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
+import os
 
 class MainWindow(QtWidgets.QMainWindow):
     translations = {
@@ -64,6 +65,26 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Erwachsener",
             "Belt": "Gurt",
             "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)"
+        },
+        "ro": {  # Adăugăm traduceri pentru română
+            "Car Face Tracker": "hera",
+            "KPI": "KPI",
+            "Value": "Valoare",
+            "Video Feed": "Flux Video",
+            "Switch to Static Mode": "Trece la Modul Static",
+            "Switch to Live Mode": "Trece la Modul Live",
+            "Load Static Image": "Încarcă Imagine Statică",
+            "Analyze": "Analizează",
+            "No Image": "Fără Imagine",
+            "Please load a static image first.": "Încarcă mai întâi o imagine statică.",
+            "Yaw": "Gir",
+            "Pitch": "Tangaj",
+            "Roll": "Ruliu",
+            "Tilt": "Înclinare",
+            "Yawn": "Căscat",
+            "Adult": "Adult",
+            "Belt": "Centură",
+            "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)"
         }
     }
 
@@ -95,31 +116,31 @@ class MainWindow(QtWidgets.QMainWindow):
         title_layout = QtWidgets.QHBoxLayout(title_bar)
         title_layout.setContentsMargins(10, 0, 10, 0)
         
-        # Title "hera"
+        # Titlu "hera"
         title_label = QtWidgets.QLabel(self.tr("Car Face Tracker"))
         title_label.setStyleSheet("""
             font: bold 18px 'Arial';
-            color: #FFFFFF;
+            color: #3498DB;
             padding: 5px;
         """)
         title_layout.addWidget(title_label)
         
         title_layout.addStretch()
         
-        # Language selection dropdown - Îmbunătățit pentru vizibilitate
+        # Language selection dropdown cu SVG-uri
         self.language_combo = QtWidgets.QComboBox()
-        self.language_combo.addItem("🇬🇧", "")
-        self.language_combo.addItem("🇫🇷", "")
-        self.language_combo.addItem("🇩🇪", "")
-        self.language_combo.setFixedSize(80, 35)  # Dimensiune ajustată pentru claritate
+        base_path = os.path.dirname(__file__)  # Calea către folderul ui
+        self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "gb.svg")), "")
+        self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "fr.svg")), "")
+        self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "de.svg")), "")
+        self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "ro.svg")), "")
+        self.language_combo.setFixedSize(80, 35)
         self.language_combo.setStyleSheet("""
             QComboBox {
                 background-color: #3498DB;
                 border: 2px solid #FFFFFF;
                 border-radius: 8px;
                 padding: 5px;
-                font: 18px;
-                color: white;
             }
             QComboBox:hover {
                 background-color: #2980B9;
@@ -337,6 +358,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if ret:
             print("Frame captured successfully")
             results = self.frame_processor.process_frame(frame)
+            print(f"Live video results: {results}")
             self.update_kpis(results)
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_frame.shape
@@ -367,8 +389,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.static_image is None:
             QtWidgets.QMessageBox.warning(self, self.tr("No Image"), self.tr("Please load a static image first."))
             return
+        print("Analyzing static image...")
+        # Reinitialize MediaPipeAdapter to avoid the persistant state.
+        from adapters.mediapipe_adapter import MediaPipeAdapter
+        self.frame_processor.mediapipe_adapter = MediaPipeAdapter(mode="static", config={
+            "max_num_faces": 1,
+            "refine_landmarks": True,
+            "min_detection_confidence": 0.5,
+            "min_tracking_confidence": 0.5
+        })
         results = self.frame_processor.process_frame(self.static_image)
-        print(f"Analysis results: {results}")  # Debug
+        print(f"Analysis results: {results}")
         self.update_kpis(results)
     
     def update_kpis(self, results):
@@ -396,7 +427,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.animation.start()
     
     def change_language(self, index):
-        languages = ["en", "fr", "de"]
+        languages = ["en", "fr", "de", "ro"]  
         self.current_language = languages[index]
         self.retranslate_ui()
     
