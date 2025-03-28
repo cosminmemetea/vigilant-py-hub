@@ -1,22 +1,22 @@
 # kpi/kpi_manager.py
+import logging
+
 class KpiManager:
     def __init__(self):
-        self.calculators = {}
-        self.observers = []  # Observers can be UI components
-
+        self.calculators = []
+        logging.debug("KpiManager initialized.")
+    
     def register_calculator(self, calculator):
-        self.calculators[calculator.name()] = calculator
-
-    def calculate_all(self, landmarks, image_size) -> dict:
+        self.calculators.append(calculator)
+        logging.debug(f"Calculator registered: {calculator.name()}")
+    
+    def calculate(self, landmarks, image_size, frame):
         results = {}
-        for name, calc in self.calculators.items():
-            results[name] = calc.calculate(landmarks, image_size)
-        self.notify_observers(results)
+        for calculator in self.calculators:
+            logging.debug(f"Executing calculator: {calculator.name()}")
+            result = calculator.calculate(landmarks, image_size, frame)
+            if isinstance(result, dict):
+                results.update(result)
+            else:
+                results[calculator.name()] = result
         return results
-
-    def register_observer(self, observer):
-        self.observers.append(observer)
-
-    def notify_observers(self, results):
-        for observer in self.observers:
-            observer.update(results)

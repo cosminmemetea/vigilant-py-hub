@@ -1,9 +1,23 @@
 {
   "mediapipe": {
-      "max_num_faces": 1,
-      "refine_landmarks": true,
-      "min_detection_confidence": 0.6,
-      "min_tracking_confidence": 0.6
+    "max_num_faces": 1,
+    "refine_landmarks": true,
+    "min_detection_confidence": 0.5,
+    "min_tracking_confidence": 0.5
   },
-  "kpis": ["yaw", "pitch", "roll", "tilt", "yawn", "adult", "belt"]
+  "kpis": [
+    "yaw",
+    "pitch",
+    "roll",
+    "tilt",
+    "yawn",
+    "owl_looking",
+    "lizard_looking",
+    "eyelid_openness",
+    "adult",
+    "belt",
+    "distraction",
+    "inattention",
+    "fatigue"
+  ]
 }
