@@ -50,4 +50,4 @@ class InattentionCalculator(KpiCalculator):
             if self.start_time is not None:
                 logging.debug(f"Inattention ended: Duration={current_time - self.start_time:.2f}s")
             self.start_time = None
-            return "N/A"
+            return "None"

@@ -13,7 +13,7 @@ class VideoPanel(QtWidgets.QWidget):
         self.video_label = QtWidgets.QLabel(self.tr("Video Feed"))
         self.video_label.setAlignment(QtCore.Qt.AlignCenter)
         self.video_label.setFixedSize(800, 600)
-        self.set_default_style()  # Initial style
+        self.set_default_style()
         layout.addWidget(self.video_label, alignment=QtCore.Qt.AlignCenter)
         
         btn_layout = QtWidgets.QHBoxLayout()
@@ -64,7 +64,17 @@ class VideoPanel(QtWidgets.QWidget):
     def update_video_style(self, results):
         inattention = results.get("inattention", "None")
         fatigue = results.get("fatigue", "None")
-        if inattention == "Detected" or fatigue.startswith("Detected"):
+        owl_result = results.get("owl_looking", "None")
+        lizard_result = results.get("lizard_looking", "None")
+        
+        # Handle both string and dict cases
+        owl_distraction = owl_result.get("distraction", "None") if isinstance(owl_result, dict) else "None"
+        lizard_distraction = lizard_result.get("distraction", "None") if isinstance(lizard_result, dict) else "None"
+        
+        if (inattention == "Detected" or 
+            fatigue.startswith("Detected") or 
+            owl_distraction in ["Long", "VATS"] or 
+            lizard_distraction in ["Long", "VATS"]):
             self.video_label.setStyleSheet("""
                 background-color: black;
                 border: 2px solid red;

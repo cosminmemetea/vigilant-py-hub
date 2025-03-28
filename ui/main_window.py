@@ -34,8 +34,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Adult",
             "Belt": "Belt",
             "Distraction": "Distraction",
-            "Inattention": "Inattention",  # New
-            "Fatigue": "Fatigue",  # New
+            "Inattention": "Inattention",
+            "Fatigue": "Fatigue",
             "Image Files (*.png *.jpg *.jpeg)": "Image Files (*.png *.jpg *.jpeg)",
             "Error": "Error",
             "Could not access camera.": "Could not access camera.",
@@ -64,8 +64,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Adulte",
             "Belt": "Ceinture",
             "Distraction": "Distraction",
-            "Inattention": "Inattention",  # New
-            "Fatigue": "Fatigue",  # New
+            "Inattention": "Inattention",
+            "Fatigue": "Fatigue",
             "Image Files (*.png *.jpg *.jpeg)": "Fichiers Image (*.png *.jpg *.jpeg)",
             "Error": "Erreur",
             "Could not access camera.": "Impossible d'accéder à la caméra.",
@@ -94,8 +94,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Erwachsener",
             "Belt": "Gurt",
             "Distraction": "Ablenkung",
-            "Inattention": "Unaufmerksamkeit",  # New
-            "Fatigue": "Müdigkeit",  # New
+            "Inattention": "Unaufmerksamkeit",
+            "Fatigue": "Müdigkeit",
             "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)",
             "Error": "Fehler",
             "Could not access camera.": "Kamera konnte nicht aufgerufen werden.",
@@ -124,8 +124,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Adult",
             "Belt": "Centură",
             "Distraction": "Distragere",
-            "Inattention": "Neatenție",  # New
-            "Fatigue": "Oboseală",  # New
+            "Inattention": "Neatenție",
+            "Fatigue": "Oboseală",
             "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)",
             "Error": "Eroare",
             "Could not access camera.": "Nu s-a putut accesa camera.",
@@ -181,7 +181,6 @@ class MainWindow(QtWidgets.QMainWindow):
         content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout.setSpacing(30)
         
-        # Expanded left table to 11 rows for inattention and fatigue
         self.left_table = KPITable(11, ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
                                        "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue"], self.tr)
         logging.debug(f"Left table initialized with {self.left_table.rowCount()} rows")
@@ -239,7 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
             qt_image = QtGui.QImage(rgb_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
             self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
             self.update_kpis(results)
-            self.video_panel.update_video_style(results)  # New: Visual feedback
+            self.video_panel.update_video_style(results)
         else:
             logging.error("Failed to read frame from camera.")
     
@@ -281,19 +280,24 @@ class MainWindow(QtWidgets.QMainWindow):
         qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
         self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
         self.update_kpis(results)
-        self.video_panel.update_video_style(results)  # New: Visual feedback
+        self.video_panel.update_video_style(results)
     
     def update_kpis(self, results):
         kpi_keys_left = ["yaw", "pitch", "roll", "tilt", "yawn", "owl_looking", "lizard_looking", 
                          "left_eye_openness", "right_eye_openness", "inattention", "fatigue"]
         for i, key in enumerate(kpi_keys_left):
             value = results.get(key, "N/A")
-            if isinstance(value, (int, float)):
+            if isinstance(value, dict):  # Handle owl_looking and lizard_looking
+                if key == "owl_looking":
+                    value = f"Yaw: {value.get('yaw', 0.0):.2f}, Pitch: {value.get('pitch', 0.0):.2f}, Dist: {value.get('distraction', 'None')}"
+                elif key == "lizard_looking":
+                    value = f"Dir: {value.get('direction', 'None')}, Dist: {value.get('distraction', 'None')}"
+            elif isinstance(value, (int, float)):
                 value = f"{value:.2f}"
             elif value is None:
                 value = "N/A"
             item = self.left_table.item(i, 1)
-            if item is None:  # Fix for NoneType error
+            if item is None:
                 item = QtWidgets.QTableWidgetItem("N/A")
                 item.setForeground(QtGui.QColor("white"))
                 item.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -306,7 +310,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for i, key in enumerate(kpi_keys_right):
             value = results.get(key, "N/A")
             item = self.right_table.item(i, 1)
-            if item is None:  # Same fix for right table
+            if item is None:
                 item = QtWidgets.QTableWidgetItem("N/A")
                 item.setForeground(QtGui.QColor("white"))
                 item.setFlags(QtCore.Qt.ItemIsEnabled)
