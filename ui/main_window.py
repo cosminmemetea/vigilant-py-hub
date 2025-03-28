@@ -1,4 +1,3 @@
-# ui/main_window.py
 import cv2
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -35,6 +34,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Adult",
             "Belt": "Belt",
             "Distraction": "Distraction",
+            "Inattention": "Inattention",  # New
+            "Fatigue": "Fatigue",  # New
             "Image Files (*.png *.jpg *.jpeg)": "Image Files (*.png *.jpg *.jpeg)",
             "Error": "Error",
             "Could not access camera.": "Could not access camera.",
@@ -63,6 +64,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Adulte",
             "Belt": "Ceinture",
             "Distraction": "Distraction",
+            "Inattention": "Inattention",  # New
+            "Fatigue": "Fatigue",  # New
             "Image Files (*.png *.jpg *.jpeg)": "Fichiers Image (*.png *.jpg *.jpeg)",
             "Error": "Erreur",
             "Could not access camera.": "Impossible d'accéder à la caméra.",
@@ -91,6 +94,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Erwachsener",
             "Belt": "Gurt",
             "Distraction": "Ablenkung",
+            "Inattention": "Unaufmerksamkeit",  # New
+            "Fatigue": "Müdigkeit",  # New
             "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)",
             "Error": "Fehler",
             "Could not access camera.": "Kamera konnte nicht aufgerufen werden.",
@@ -119,6 +124,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Adult": "Adult",
             "Belt": "Centură",
             "Distraction": "Distragere",
+            "Inattention": "Neatenție",  # New
+            "Fatigue": "Oboseală",  # New
             "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)",
             "Error": "Eroare",
             "Could not access camera.": "Nu s-a putut accesa camera.",
@@ -128,27 +135,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, frame_processor):
         super().__init__()
-        self.current_language = "en"  # Default language
+        self.current_language = "en"
         self.frame_processor = frame_processor
-        self.static_image = None  # Placeholder for static image
-        self.mode = "live"  # Start in live mode
-        self.cap = None  # Camera object, initialized later
+        self.static_image = None
+        self.mode = "live"
+        self.cap = None
         
-        # Set up the UI
         self.setup_ui()
         
-        # Set up a timer for live video updates
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_live_video)
         if self.mode == "live":
             self.initialize_camera()
 
     def tr(self, text):
-        # Translate text based on the current language
         return self.translations.get(self.current_language, {}).get(text, text)
     
     def initialize_camera(self):
-        # Initialize or reinitialize the camera for live mode
         if self.cap is not None and self.cap.isOpened():
             self.cap.release()
         self.cap = cv2.VideoCapture(0)
@@ -158,41 +161,36 @@ class MainWindow(QtWidgets.QMainWindow):
             self.mode = "static"
             self.update_mode_ui()
         else:
-            self.timer.start(30)  # Update every 30ms (~33 FPS)
+            self.timer.start(30)
             logging.info("Camera initialized successfully.")
     
     def setup_ui(self):
-        # Set up the user interface in a modular way
         self.setWindowTitle(self.tr("Car Face Tracker"))
         self.setMinimumSize(1200, 700)
         
-        # Main widget and layout
         main_widget = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Add title bar
         self.title_bar = TitleBar(self, self.tr)
         self.title_bar.language_combo.currentIndexChanged.connect(self.change_language)
         main_layout.addWidget(self.title_bar)
         
-        # Content widget and layout
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QHBoxLayout(content_widget)
         content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout.setSpacing(30)
         
-        # Left KPI table (expanded for new KPIs)
-        self.left_table = KPITable(9, ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
-                                      "Left Eye Openness", "Right Eye Openness"], self.tr)
+        # Expanded left table to 11 rows for inattention and fatigue
+        self.left_table = KPITable(11, ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
+                                       "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue"], self.tr)
+        logging.debug(f"Left table initialized with {self.left_table.rowCount()} rows")
         content_layout.addWidget(self.left_table, 1)
         
-        # Center panel: Video feed and controls (removed toggle annotations button)
         self.video_panel = VideoPanel(self, self.tr, self.toggle_mode, self.load_static_image, 
                                       self.analyze_static_image)
         content_layout.addWidget(self.video_panel, 2)
         
-        # Right KPI table
         self.right_table = KPITable(3, ["Adult", "Belt", "Distraction"], self.tr)
         content_layout.addWidget(self.right_table, 1)
         
@@ -204,7 +202,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.apply_fade_in_animation()
     
     def toggle_mode(self):
-        # Switch between live and static modes
         if self.mode == "live":
             self.mode = "static"
             self.video_panel.toggle_mode_btn.setText(self.tr("Switch to Live Mode"))
@@ -223,12 +220,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_mode_ui()
     
     def update_mode_ui(self):
-        # Update button states based on the current mode
         self.video_panel.load_image_btn.setEnabled(self.mode == "static")
         self.video_panel.analyze_btn.setEnabled(self.mode == "static")
     
     def update_live_video(self):
-        # Update the live video feed with markers
         if not hasattr(self, 'cap') or not self.cap.isOpened():
             logging.warning("Camera is not open.")
             self.initialize_camera()
@@ -236,21 +231,19 @@ class MainWindow(QtWidgets.QMainWindow):
         ret, frame = self.cap.read()
         if ret:
             logging.debug(f"Frame received: {frame.shape}")
-            # Process the frame and apply markers
             results = self.frame_processor.process_frame(frame)
             logging.debug(f"Live video results: {results}")
-            # Convert the processed frame to RGB for display
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_frame.shape
             bytes_per_line = ch * w
             qt_image = QtGui.QImage(rgb_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
             self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
             self.update_kpis(results)
+            self.video_panel.update_video_style(results)  # New: Visual feedback
         else:
             logging.error("Failed to read frame from camera.")
     
     def load_static_image(self):
-        # Load a static image from file
         options = QtWidgets.QFileDialog.Options()
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Load Static Image"), "",
                                                             self.tr("Image Files (*.png *.jpg *.jpeg)"), options=options)
@@ -266,10 +259,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 bytes_per_line = ch * w
                 qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
                 self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
-                self.update_kpis({})  # Reset KPIs
+                self.update_kpis({})
     
     def analyze_static_image(self):
-        # Analyze the static image and display with markers
         if self.static_image is None:
             QtWidgets.QMessageBox.warning(self, self.tr("No Image"), self.tr("Please load a static image first."))
             return
@@ -289,29 +281,41 @@ class MainWindow(QtWidgets.QMainWindow):
         qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
         self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
         self.update_kpis(results)
+        self.video_panel.update_video_style(results)  # New: Visual feedback
     
     def update_kpis(self, results):
-        # Update KPI values in the tables
         kpi_keys_left = ["yaw", "pitch", "roll", "tilt", "yawn", "owl_looking", "lizard_looking", 
-                         "left_eye_openness", "right_eye_openness"]
+                         "left_eye_openness", "right_eye_openness", "inattention", "fatigue"]
         for i, key in enumerate(kpi_keys_left):
-           
             value = results.get(key, "N/A")
             if isinstance(value, (int, float)):
-                value = f"{value:.2f}"  # Increased precision for openness
+                value = f"{value:.2f}"
             elif value is None:
                 value = "N/A"
-            self.left_table.item(i, 1).setText(str(value))
+            item = self.left_table.item(i, 1)
+            if item is None:  # Fix for NoneType error
+                item = QtWidgets.QTableWidgetItem("N/A")
+                item.setForeground(QtGui.QColor("white"))
+                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.left_table.setItem(i, 1, item)
+                logging.warning(f"Reinitialized missing item at left table row {i}, column 1")
+            item.setText(str(value))
             logging.debug(f"Updated KPI {key}: {value}")
         
         kpi_keys_right = ["adult", "belt", "distraction"]
         for i, key in enumerate(kpi_keys_right):
             value = results.get(key, "N/A")
-            self.right_table.item(i, 1).setText(str(value))
+            item = self.right_table.item(i, 1)
+            if item is None:  # Same fix for right table
+                item = QtWidgets.QTableWidgetItem("N/A")
+                item.setForeground(QtGui.QColor("white"))
+                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.right_table.setItem(i, 1, item)
+                logging.warning(f"Reinitialized missing item at right table row {i}, column 1")
+            item.setText(str(value))
             logging.debug(f"Updated KPI {key}: {value}")
     
     def apply_fade_in_animation(self):
-        # Apply a fade-in animation when the window opens
         effect = QtWidgets.QGraphicsOpacityEffect(self)
         self.setGraphicsEffect(effect)
         self.animation = QtCore.QPropertyAnimation(effect, b"opacity")
@@ -321,14 +325,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.animation.start()
     
     def change_language(self, index):
-        # Change the language and update the UI
         languages = ["en", "fr", "de", "ro"]
         self.current_language = languages[index]
         self.retranslate_ui()
         logging.info(f"Language changed to {self.current_language}")
     
     def retranslate_ui(self):
-        # Refresh UI text with the current language
         self.setWindowTitle(self.tr("Car Face Tracker"))
         self.title_bar.title_label.setText(self.tr("Car Face Tracker"))
         self.left_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
@@ -338,7 +340,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.video_panel.load_image_btn.setText(self.tr("Load Static Image"))
         self.video_panel.analyze_btn.setText(self.tr("Analyze"))
         kpi_keys_left = ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
-                         "Left Eye Openness", "Right Eye Openness"]
+                         "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue"]
         for i, kpi in enumerate(kpi_keys_left):
             self.left_table.item(i, 0).setText(self.tr(kpi))
         kpi_keys_right = ["Adult", "Belt", "Distraction"]
@@ -347,7 +349,6 @@ class MainWindow(QtWidgets.QMainWindow):
         logging.debug("UI retranslated.")
     
     def closeEvent(self, event):
-        # Release resources when closing the window
         if hasattr(self, 'timer'):
             self.timer.stop()
         if hasattr(self, 'cap') and self.cap is not None and self.cap.isOpened():

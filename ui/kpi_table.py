@@ -1,4 +1,3 @@
-# ui/kpi_table.py
 from PyQt5 import QtWidgets, QtGui, QtCore
 import logging
 
@@ -11,7 +10,6 @@ class KPITable(QtWidgets.QTableWidget):
         logging.debug(f"KPITable initialized with {rows} rows and KPIs: {kpis}")
     
     def setup_ui(self):
-        # Set up the KPI table
         self.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
@@ -41,11 +39,17 @@ class KPITable(QtWidgets.QTableWidget):
         """)
     
     def update_values(self, results):
-        # Update KPI values in the table
         for i, kpi in enumerate(self.kpis):
             value = results.get(kpi.lower().replace(" ", "_"), "N/A")
             if isinstance(value, (int, float)):
                 value = f"{value:.2f}"
             elif value is None:
                 value = "N/A"
-            self.item(i, 1).setText(str(value))
+            item = self.item(i, 1)
+            if item is None:  # Ensure no NoneType errors
+                item = QtWidgets.QTableWidgetItem("N/A")
+                item.setForeground(QtGui.QColor("white"))
+                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.setItem(i, 1, item)
+                logging.warning(f"Reinitialized missing item at row {i}, column 1")
+            item.setText(str(value))

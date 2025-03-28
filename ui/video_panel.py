@@ -1,4 +1,3 @@
-# ui/video_panel.py
 from PyQt5 import QtWidgets, QtGui, QtCore
 import cv2
 import logging
@@ -11,20 +10,12 @@ class VideoPanel(QtWidgets.QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(0, 0, 0, 0)
         
-        # Video label
         self.video_label = QtWidgets.QLabel(self.tr("Video Feed"))
         self.video_label.setAlignment(QtCore.Qt.AlignCenter)
         self.video_label.setFixedSize(800, 600)
-        self.video_label.setStyleSheet("""
-            background-color: black;
-            border: 2px solid #3498DB;
-            border-radius: 10px;
-            font: bold 16px;
-            color: white;
-        """)
+        self.set_default_style()  # Initial style
         layout.addWidget(self.video_label, alignment=QtCore.Qt.AlignCenter)
         
-        # Button layout
         btn_layout = QtWidgets.QHBoxLayout()
         btn_layout.setSpacing(15)
         
@@ -41,7 +32,6 @@ class VideoPanel(QtWidgets.QWidget):
         logging.debug("VideoPanel initialized.")
     
     def create_button(self, text, callback, enabled=True, color="#3498DB", hover_color="#2980B9"):
-        # Helper method to create a styled button
         button = QtWidgets.QPushButton(self.tr(text))
         button.setStyleSheet(f"""
             QPushButton {{
@@ -61,3 +51,26 @@ class VideoPanel(QtWidgets.QWidget):
         button.clicked.connect(callback)
         button.setEnabled(enabled)
         return button
+    
+    def set_default_style(self):
+        self.video_label.setStyleSheet("""
+            background-color: black;
+            border: 2px solid #3498DB;
+            border-radius: 10px;
+            font: bold 16px;
+            color: white;
+        """)
+    
+    def update_video_style(self, results):
+        inattention = results.get("inattention", "None")
+        fatigue = results.get("fatigue", "None")
+        if inattention == "Detected" or fatigue.startswith("Detected"):
+            self.video_label.setStyleSheet("""
+                background-color: black;
+                border: 2px solid red;
+                border-radius: 10px;
+                font: bold 16px;
+                color: white;
+            """)
+        else:
+            self.set_default_style()
