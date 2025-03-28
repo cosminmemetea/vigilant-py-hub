@@ -36,6 +36,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Distraction": "Distraction",
             "Inattention": "Inattention",
             "Fatigue": "Fatigue",
+            "Microsleep": "Microsleep",  # Added
+            "Sleep": "Sleep",            # Added
             "Image Files (*.png *.jpg *.jpeg)": "Image Files (*.png *.jpg *.jpeg)",
             "Error": "Error",
             "Could not access camera.": "Could not access camera.",
@@ -66,6 +68,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Distraction": "Distraction",
             "Inattention": "Inattention",
             "Fatigue": "Fatigue",
+            "Microsleep": "Microsommeil",  # Added
+            "Sleep": "Sommeil",           # Added
             "Image Files (*.png *.jpg *.jpeg)": "Fichiers Image (*.png *.jpg *.jpeg)",
             "Error": "Erreur",
             "Could not access camera.": "Impossible d'accéder à la caméra.",
@@ -96,6 +100,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Distraction": "Ablenkung",
             "Inattention": "Unaufmerksamkeit",
             "Fatigue": "Müdigkeit",
+            "Microsleep": "Mikroschlaf",  # Added
+            "Sleep": "Schlaf",           # Added
             "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)",
             "Error": "Fehler",
             "Could not access camera.": "Kamera konnte nicht aufgerufen werden.",
@@ -126,6 +132,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Distraction": "Distragere",
             "Inattention": "Neatenție",
             "Fatigue": "Oboseală",
+            "Microsleep": "Microsomn",  # Added
+            "Sleep": "Somn",           # Added
             "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)",
             "Error": "Eroare",
             "Could not access camera.": "Nu s-a putut accesa camera.",
@@ -181,8 +189,10 @@ class MainWindow(QtWidgets.QMainWindow):
         content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout.setSpacing(30)
         
-        self.left_table = KPITable(11, ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
-                                       "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue"], self.tr)
+        # Updated to 13 rows for Microsleep and Sleep
+        self.left_table = KPITable(13, ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
+                                       "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue", 
+                                       "Microsleep", "Sleep"], self.tr)
         logging.debug(f"Left table initialized with {self.left_table.rowCount()} rows")
         content_layout.addWidget(self.left_table, 1)
         
@@ -284,14 +294,19 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def update_kpis(self, results):
         kpi_keys_left = ["yaw", "pitch", "roll", "tilt", "yawn", "owl_looking", "lizard_looking", 
-                         "left_eye_openness", "right_eye_openness", "inattention", "fatigue"]
+                         "left_eye_openness", "right_eye_openness", "inattention", "fatigue", 
+                         "microsleep", "sleep"]
         for i, key in enumerate(kpi_keys_left):
             value = results.get(key, "N/A")
-            if isinstance(value, dict):  # Handle owl_looking and lizard_looking
+            if isinstance(value, dict):
                 if key == "owl_looking":
                     value = f"Yaw: {value.get('yaw', 0.0):.2f}, Pitch: {value.get('pitch', 0.0):.2f}, Dist: {value.get('distraction', 'None')}"
                 elif key == "lizard_looking":
                     value = f"Dir: {value.get('direction', 'None')}, Dist: {value.get('distraction', 'None')}"
+                elif key == "sleep":  # Handle SleepCalculator output
+                    value = f"Micro: {value.get('microsleep', 'None')}, Sleep: {value.get('sleep', 'None')}"
+                elif key == "microsleep" or key == "sleep":  # Directly use dict values if separate
+                    value = value.get(key, "N/A")
             elif isinstance(value, (int, float)):
                 value = f"{value:.2f}"
             elif value is None:
@@ -344,7 +359,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.video_panel.load_image_btn.setText(self.tr("Load Static Image"))
         self.video_panel.analyze_btn.setText(self.tr("Analyze"))
         kpi_keys_left = ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
-                         "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue"]
+                         "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue", 
+                         "Microsleep", "Sleep"]
         for i, kpi in enumerate(kpi_keys_left):
             self.left_table.item(i, 0).setText(self.tr(kpi))
         kpi_keys_right = ["Adult", "Belt", "Distraction"]

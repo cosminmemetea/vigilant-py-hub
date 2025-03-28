@@ -66,15 +66,20 @@ class VideoPanel(QtWidgets.QWidget):
         fatigue = results.get("fatigue", "None")
         owl_result = results.get("owl_looking", "None")
         lizard_result = results.get("lizard_looking", "None")
+        sleep_result = results.get("sleep", {"microsleep": "None", "sleep": "None"})
         
-        # Handle both string and dict cases
-        owl_distraction = owl_result.get("distraction", "None") if isinstance(owl_result, dict) else "None"
-        lizard_distraction = lizard_result.get("distraction", "None") if isinstance(lizard_result, dict) else "None"
+        owl_distraction = owl_result.get("distraction", "None") if isinstance(owl_result, dict) else owl_result
+        lizard_distraction = lizard_result.get("distraction", "None") if isinstance(lizard_result, dict) else lizard_result
+        # Handle both dict and string cases for sleep_result
+        microsleep_status = sleep_result.get("microsleep", "None") if isinstance(sleep_result, dict) else "None"
+        sleep_status = sleep_result.get("sleep", "None") if isinstance(sleep_result, dict) else "None"
         
         if (inattention == "Detected" or 
             fatigue.startswith("Detected") or 
             owl_distraction in ["Long", "VATS"] or 
-            lizard_distraction in ["Long", "VATS"]):
+            lizard_distraction in ["Long", "VATS"] or 
+            microsleep_status == "Detected" or 
+            sleep_status == "Detected"):
             self.video_label.setStyleSheet("""
                 background-color: black;
                 border: 2px solid red;
