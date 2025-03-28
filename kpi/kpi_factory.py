@@ -1,5 +1,6 @@
 # kpi/kpi_factory.py (updated)
 from kpi.sleep_calculator import SleepCalculator
+from kpi.unresponsive_calculator import UnresponsiveCalculator
 from kpi.yaw_calculator import YawCalculator
 from kpi.pitch_calculator import PitchCalculator
 from kpi.roll_calculator import RollCalculator
@@ -52,5 +53,7 @@ class KpiFactory:
                 calculators.append(FatigueCalculator())
             elif key == "sleep":
                 calculators.append(SleepCalculator())
+            elif key == "unresponsive":
+                calculators.append(UnresponsiveCalculator())
         logging.debug(f"Calculators created: {[calc.name() for calc in calculators]}")
         return calculators
