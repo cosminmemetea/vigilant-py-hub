@@ -6,20 +6,20 @@
     "min_tracking_confidence": 0.5
   },
   "kpis": [
-    "yaw",
-    "pitch",
-    "roll",
-    "tilt",
-    "yawn",
-    "owl_looking",
-    "lizard_looking",
-    "eyelid_openness",
-    "adult",
-    "belt",
-    "distraction",
-    "inattention",
-    "fatigue",
-    "sleep",
-    "unresponsive"
+    {"name": "yaw", "enabled": true},
+    {"name": "pitch", "enabled": true},
+    {"name": "roll", "enabled": true},
+    {"name": "tilt", "enabled": true},
+    {"name": "yawn", "enabled": true},
+    {"name": "owl_looking", "enabled": false},
+    {"name": "lizard_looking", "enabled": false},
+    {"name": "left_eye_openness", "enabled": true},
+    {"name": "right_eye_openness", "enabled": true},
+    {"name": "inattention", "enabled": false},
+    {"name": "fatigue", "enabled": true},
+    {"name": "microsleep", "enabled": true},
+    {"name": "sleep", "enabled": true},
+    {"name": "unresponsive", "enabled": true},
+    {"name": "drowsiness", "enabled": false}
   ]
 }

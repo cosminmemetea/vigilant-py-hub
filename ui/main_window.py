@@ -6,7 +6,6 @@ from ui.title_bar import TitleBar
 from ui.kpi_table import KPITable
 from ui.video_panel import VideoPanel
 
-# Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -38,7 +37,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Fatigue": "Fatigue",
             "Microsleep": "Microsleep",
             "Sleep": "Sleep",
-            "Unresponsive": "Unresponsive",  # Added
+            "Unresponsive": "Unresponsive",
+            "Drowsiness": "Drowsiness",
             "Image Files (*.png *.jpg *.jpeg)": "Image Files (*.png *.jpg *.jpeg)",
             "Error": "Error",
             "Could not access camera.": "Could not access camera.",
@@ -71,7 +71,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Fatigue": "Fatigue",
             "Microsleep": "Microsommeil",
             "Sleep": "Sommeil",
-            "Unresponsive": "Non Réactif",  # Added
+            "Unresponsive": "Non Réactif",
+            "Drowsiness": "Somnolence",
             "Image Files (*.png *.jpg *.jpeg)": "Fichiers Image (*.png *.jpg *.jpeg)",
             "Error": "Erreur",
             "Could not access camera.": "Impossible d'accéder à la caméra.",
@@ -104,7 +105,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Fatigue": "Müdigkeit",
             "Microsleep": "Mikroschlaf",
             "Sleep": "Schlaf",
-            "Unresponsive": "Nicht Ansprechbar",  # Added
+            "Unresponsive": "Nicht Ansprechbar",
+            "Drowsiness": "Schläfrigkeit",
             "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)",
             "Error": "Fehler",
             "Could not access camera.": "Kamera konnte nicht aufgerufen werden.",
@@ -137,7 +139,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Fatigue": "Oboseală",
             "Microsleep": "Microsomn",
             "Sleep": "Somn",
-            "Unresponsive": "Nereceptiv",  # Added
+            "Unresponsive": "Nereceptiv",
+            "Drowsiness": "Somnolență",
             "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)",
             "Error": "Eroare",
             "Could not access camera.": "Nu s-a putut accesa camera.",
@@ -145,10 +148,11 @@ class MainWindow(QtWidgets.QMainWindow):
         }
     }
 
-    def __init__(self, frame_processor):
+    def __init__(self, frame_processor, enabled_kpis):
         super().__init__()
         self.current_language = "en"
         self.frame_processor = frame_processor
+        self.enabled_kpis = enabled_kpis  # List of enabled KPI names from config
         self.static_image = None
         self.mode = "live"
         self.cap = None
@@ -193,11 +197,10 @@ class MainWindow(QtWidgets.QMainWindow):
         content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout.setSpacing(30)
         
-        # Updated to 14 rows for Unresponsive
-        self.left_table = KPITable(14, ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
-                                       "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue", 
-                                       "Microsleep", "Sleep", "Unresponsive"], self.tr)
-        logging.debug(f"Left table initialized with {self.left_table.rowCount()} rows")
+        # Dynamically create left table based on enabled KPIs
+        kpi_labels = [kpi.capitalize().replace("_", " ") for kpi in self.enabled_kpis]
+        self.left_table = KPITable(len(kpi_labels), kpi_labels, self.tr)
+        logging.debug(f"Left table initialized with {self.left_table.rowCount()} rows: {kpi_labels}")
         content_layout.addWidget(self.left_table, 1)
         
         self.video_panel = VideoPanel(self, self.tr, self.toggle_mode, self.load_static_image, 
@@ -297,10 +300,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.video_panel.update_video_style(results)
     
     def update_kpis(self, results):
-        kpi_keys_left = ["yaw", "pitch", "roll", "tilt", "yawn", "owl_looking", "lizard_looking", 
-                         "left_eye_openness", "right_eye_openness", "inattention", "fatigue", 
-                         "microsleep", "sleep", "unresponsive"]
-        for i, key in enumerate(kpi_keys_left):
+        for i, key in enumerate(self.enabled_kpis):
             value = results.get(key, "N/A")
             if isinstance(value, dict):
                 if key == "owl_looking":
@@ -308,11 +308,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 elif key == "lizard_looking":
                     value = f"Dir: {value.get('direction', 'None')}, Dist: {value.get('distraction', 'None')}"
                 elif key == "sleep":
-                    if i == kpi_keys_left.index("microsleep"):
+                    if "microsleep" in self.enabled_kpis and i == self.enabled_kpis.index("microsleep"):
                         value = value.get("microsleep", "N/A")
-                    elif i == kpi_keys_left.index("sleep"):
+                    elif "sleep" in self.enabled_kpis and i == self.enabled_kpis.index("sleep"):
                         value = value.get("sleep", "N/A")
-                elif key == "microsleep" or key == "sleep":
+                    else:
+                        value = f"Micro: {value.get('microsleep', 'N/A')}, Sleep: {value.get('sleep', 'N/A')}"
+                elif key in ["microsleep", "sleep"]:
                     value = value.get(key, "N/A")
             elif isinstance(value, (int, float)):
                 value = f"{value:.2f}"
@@ -365,11 +367,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.video_panel.toggle_mode_btn.setText(self.tr("Switch to Static Mode") if self.mode == "live" else self.tr("Switch to Live Mode"))
         self.video_panel.load_image_btn.setText(self.tr("Load Static Image"))
         self.video_panel.analyze_btn.setText(self.tr("Analyze"))
-        kpi_keys_left = ["Yaw", "Pitch", "Roll", "Tilt", "Yawn", "Owl Looking", "Lizard Looking", 
-                         "Left Eye Openness", "Right Eye Openness", "Inattention", "Fatigue", 
-                         "Microsleep", "Sleep", "Unresponsive"]
-        for i, kpi in enumerate(kpi_keys_left):
-            self.left_table.item(i, 0).setText(self.tr(kpi))
+        for i, kpi in enumerate(self.enabled_kpis):
+            label = kpi.capitalize().replace("_", " ")
+            self.left_table.item(i, 0).setText(self.tr(label))
         kpi_keys_right = ["Adult", "Belt", "Distraction"]
         for i, kpi in enumerate(kpi_keys_right):
             self.right_table.item(i, 0).setText(self.tr(kpi))

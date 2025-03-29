@@ -62,31 +62,44 @@ class VideoPanel(QtWidgets.QWidget):
         """)
     
     def update_video_style(self, results):
-        inattention = results.get("inattention", "None")
-        fatigue = results.get("fatigue", "None")
-        owl_result = results.get("owl_looking", "None")
-        lizard_result = results.get("lizard_looking", "None")
-        sleep_result = results.get("sleep", {"microsleep": "None", "sleep": "None"})
-        unresponsive_result = results.get("unresponsive", "None")
-        
-        owl_distraction = owl_result.get("distraction", "None") if isinstance(owl_result, dict) else owl_result
-        lizard_distraction = lizard_result.get("distraction", "None") if isinstance(lizard_result, dict) else lizard_result
-        microsleep_status = sleep_result.get("microsleep", "None") if isinstance(sleep_result, dict) else "None"
-        sleep_status = sleep_result.get("sleep", "None") if isinstance(sleep_result, dict) else "None"
-        
-        if (inattention == "Detected" or 
-            fatigue.startswith("Detected") or 
-            owl_distraction in ["Long", "VATS"] or 
-            lizard_distraction in ["Long", "VATS"] or 
-            microsleep_status == "Detected" or 
-            sleep_status == "Detected" or 
-            unresponsive_result.startswith("Detected")):
-            self.video_label.setStyleSheet("""
-                background-color: black;
-                border: 2px solid red;
-                border-radius: 10px;
-                font: bold 16px;
-                color: white;
-            """)
-        else:
-            self.set_default_style()
+        # Check all results for any "Detected" state
+        for key, value in results.items():
+            if isinstance(value, str):
+                if value.startswith("Detected"):
+                    self.video_label.setStyleSheet("""
+                        background-color: black;
+                        border: 2px solid red;
+                        border-radius: 10px;
+                        font: bold 16px;
+                        color: white;
+                    """)
+                    return
+            elif isinstance(value, dict):
+                if "distraction" in value and value["distraction"] in ["Long", "VATS"]:
+                    self.video_label.setStyleSheet("""
+                        background-color: black;
+                        border: 2px solid red;
+                        border-radius: 10px;
+                        font: bold 16px;
+                        color: white;
+                    """)
+                    return
+                if "microsleep" in value and value["microsleep"] == "Detected":
+                    self.video_label.setStyleSheet("""
+                        background-color: black;
+                        border: 2px solid red;
+                        border-radius: 10px;
+                        font: bold 16px;
+                        color: white;
+                    """)
+                    return
+                if "sleep" in value and value["sleep"] == "Detected":
+                    self.video_label.setStyleSheet("""
+                        background-color: black;
+                        border: 2px solid red;
+                        border-radius: 10px;
+                        font: bold 16px;
+                        color: white;
+                    """)
+                    return
+        self.set_default_style()

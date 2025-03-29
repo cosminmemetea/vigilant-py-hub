@@ -1,6 +1,3 @@
-# kpi/kpi_factory.py (updated)
-from kpi.sleep_calculator import SleepCalculator
-from kpi.unresponsive_calculator import UnresponsiveCalculator
 from kpi.yaw_calculator import YawCalculator
 from kpi.pitch_calculator import PitchCalculator
 from kpi.roll_calculator import RollCalculator
@@ -12,8 +9,11 @@ from kpi.eyelid_openness_calculator import EyelidOpennessCalculator
 from kpi.adult_calculator import AdultCalculator
 from kpi.belt_calculator import BeltCalculator
 from kpi.distraction_calculator import DistractionCalculator
-from kpi.inattention_calculator import InattentionCalculator  # New
-from kpi.fatigue_calculator import FatigueCalculator  # New
+from kpi.inattention_calculator import InattentionCalculator
+from kpi.fatigue_calculator import FatigueCalculator
+from kpi.sleep_calculator import SleepCalculator
+from kpi.unresponsive_calculator import UnresponsiveCalculator
+from kpi.drowsiness_calculator import DrowsinessCalculator
 import logging
 
 class KpiFactory:
@@ -23,7 +23,8 @@ class KpiFactory:
     
     def create_calculators(self):
         calculators = []
-        for kpi in self.config.get("kpis", []):
+        enabled_kpis = [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True)]
+        for kpi in enabled_kpis:
             key = kpi.lower()
             if key == "yaw":
                 calculators.append(YawCalculator())
@@ -39,21 +40,25 @@ class KpiFactory:
                 calculators.append(OwlLookingCalculator())
             elif key == "lizard_looking":
                 calculators.append(LizardLookingCalculator())
-            elif key == "eyelid_openness":
-                calculators.append(EyelidOpennessCalculator())
+            elif key == "left_eye_openness" or key == "right_eye_openness":  # Both from EyelidOpennessCalculator
+                if not any(isinstance(c, EyelidOpennessCalculator) for c in calculators):
+                    calculators.append(EyelidOpennessCalculator())
             elif key == "adult":
                 calculators.append(AdultCalculator())
             elif key == "belt":
                 calculators.append(BeltCalculator())
             elif key == "distraction":
                 calculators.append(DistractionCalculator())
-            elif key == "inattention":  # New
+            elif key == "inattention":
                 calculators.append(InattentionCalculator())
-            elif key == "fatigue":  # New
+            elif key == "fatigue":
                 calculators.append(FatigueCalculator())
-            elif key == "sleep":
-                calculators.append(SleepCalculator())
+            elif key == "sleep" or key == "microsleep":  # Both from SleepCalculator
+                if not any(isinstance(c, SleepCalculator) for c in calculators):
+                    calculators.append(SleepCalculator())
             elif key == "unresponsive":
                 calculators.append(UnresponsiveCalculator())
+            elif key == "drowsiness":
+                calculators.append(DrowsinessCalculator())
         logging.debug(f"Calculators created: {[calc.name() for calc in calculators]}")
         return calculators
