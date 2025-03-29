@@ -30,8 +30,12 @@ class AppController:
         self.frame_processor = FrameProcessor(self.mediapipe_adapter, self.kpi_manager)
         logging.debug("FrameProcessor initialized.")
         
-        # Pass enabled KPIs to MainWindow
-        enabled_kpis = [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True)]
+        # Group enabled KPIs by category
+        enabled_kpis = {
+            "numeric": [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True) and kpi.get("group") == "numeric"],
+            "binary": [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True) and kpi.get("group") == "binary"],
+            "state": [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True) and kpi.get("group") == "state"]
+        }
         self.main_window = MainWindow(self.frame_processor, enabled_kpis)
         logging.info("AppController successfully initialized.")
     

@@ -6,20 +6,21 @@
     "min_tracking_confidence": 0.5
   },
   "kpis": [
-    {"name": "yaw", "enabled": true},
-    {"name": "pitch", "enabled": true},
-    {"name": "roll", "enabled": true},
-    {"name": "tilt", "enabled": true},
-    {"name": "yawn", "enabled": true},
-    {"name": "owl_looking", "enabled": false},
-    {"name": "lizard_looking", "enabled": false},
-    {"name": "left_eye_openness", "enabled": true},
-    {"name": "right_eye_openness", "enabled": true},
-    {"name": "inattention", "enabled": false},
-    {"name": "fatigue", "enabled": true},
-    {"name": "microsleep", "enabled": true},
-    {"name": "sleep", "enabled": true},
-    {"name": "unresponsive", "enabled": true},
-    {"name": "drowsiness", "enabled": false}
+    {"name": "yaw", "enabled": true, "group": "numeric"},
+    {"name": "pitch", "enabled": true, "group": "numeric"},
+    {"name": "roll", "enabled": true, "group": "numeric"},
+    {"name": "yawn", "enabled": true, "group": "numeric"},
+    {"name": "owl_looking", "enabled": true, "group": "state"},
+    {"name": "lizard_looking", "enabled": true, "group": "state"},
+    {"name": "left_eye_openness", "enabled": true, "group": "numeric"},
+    {"name": "right_eye_openness", "enabled": true, "group": "numeric"},
+    {"name": "adult", "enabled": true, "group": "binary"},
+    {"name": "belt", "enabled": true, "group": "binary"},
+    {"name": "inattention", "enabled": false, "group": "state"},
+    {"name": "fatigue", "enabled": true, "group": "state"},
+    {"name": "microsleep", "enabled": true, "group": "state"},
+    {"name": "sleep", "enabled": true, "group": "state"},
+    {"name": "unresponsive", "enabled": true, "group": "state"},
+    {"name": "drowsiness", "enabled": false, "group": "state"}
   ]
 }

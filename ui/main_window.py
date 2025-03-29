@@ -5,6 +5,7 @@ import logging
 from ui.title_bar import TitleBar
 from ui.kpi_table import KPITable
 from ui.video_panel import VideoPanel
+from ui.state_panel import StatePanel
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -26,19 +27,19 @@ class MainWindow(QtWidgets.QMainWindow):
             "Roll": "Roll",
             "Tilt": "Tilt",
             "Yawn": "Yawn",
-            "Owl Looking": "Owl Looking",
-            "Lizard Looking": "Lizard Looking",
             "Left Eye Openness": "Left Eye Openness",
             "Right Eye Openness": "Right Eye Openness",
             "Adult": "Adult",
             "Belt": "Belt",
-            "Distraction": "Distraction",
             "Inattention": "Inattention",
             "Fatigue": "Fatigue",
             "Microsleep": "Microsleep",
             "Sleep": "Sleep",
             "Unresponsive": "Unresponsive",
             "Drowsiness": "Drowsiness",
+            "None": "None",
+            "Pending": "Pending",
+            "Detected": "Detected",
             "Image Files (*.png *.jpg *.jpeg)": "Image Files (*.png *.jpg *.jpeg)",
             "Error": "Error",
             "Could not access camera.": "Could not access camera.",
@@ -60,19 +61,19 @@ class MainWindow(QtWidgets.QMainWindow):
             "Roll": "Roulis",
             "Tilt": "Inclinaison",
             "Yawn": "Bâillement",
-            "Owl Looking": "Regard Chouette",
-            "Lizard Looking": "Regard Lézard",
-            "Left Eye Openness": "Ouverture Oeil Gauche",
-            "Right Eye Openness": "Ouverture Oeil Droit",
+            "Left Eye Openness": "Ouverture Œil Gauche",
+            "Right Eye Openness": "Ouverture Œil Droit",
             "Adult": "Adulte",
             "Belt": "Ceinture",
-            "Distraction": "Distraction",
             "Inattention": "Inattention",
             "Fatigue": "Fatigue",
             "Microsleep": "Microsommeil",
             "Sleep": "Sommeil",
             "Unresponsive": "Non Réactif",
             "Drowsiness": "Somnolence",
+            "None": "Aucun",
+            "Pending": "En Attente",
+            "Detected": "Détecté",
             "Image Files (*.png *.jpg *.jpeg)": "Fichiers Image (*.png *.jpg *.jpeg)",
             "Error": "Erreur",
             "Could not access camera.": "Impossible d'accéder à la caméra.",
@@ -94,19 +95,19 @@ class MainWindow(QtWidgets.QMainWindow):
             "Roll": "Rollen",
             "Tilt": "Neigung",
             "Yawn": "Gähnen",
-            "Owl Looking": "Eulenblick",
-            "Lizard Looking": "Echsenblick",
             "Left Eye Openness": "Linkes Auge Offenheit",
             "Right Eye Openness": "Rechtes Auge Offenheit",
             "Adult": "Erwachsener",
             "Belt": "Gurt",
-            "Distraction": "Ablenkung",
             "Inattention": "Unaufmerksamkeit",
             "Fatigue": "Müdigkeit",
             "Microsleep": "Mikroschlaf",
             "Sleep": "Schlaf",
             "Unresponsive": "Nicht Ansprechbar",
             "Drowsiness": "Schläfrigkeit",
+            "None": "Kein",
+            "Pending": "Ausstehend",
+            "Detected": "Erkannt",
             "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)",
             "Error": "Fehler",
             "Could not access camera.": "Kamera konnte nicht aufgerufen werden.",
@@ -128,19 +129,19 @@ class MainWindow(QtWidgets.QMainWindow):
             "Roll": "Ruliu",
             "Tilt": "Înclinare",
             "Yawn": "Căscat",
-            "Owl Looking": "Privire Bufniță",
-            "Lizard Looking": "Privire Șopârlă",
             "Left Eye Openness": "Deschidere Ochi Stâng",
             "Right Eye Openness": "Deschidere Ochi Drept",
             "Adult": "Adult",
             "Belt": "Centură",
-            "Distraction": "Distragere",
             "Inattention": "Neatenție",
             "Fatigue": "Oboseală",
             "Microsleep": "Microsomn",
             "Sleep": "Somn",
             "Unresponsive": "Nereceptiv",
             "Drowsiness": "Somnolență",
+            "None": "Niciunul",
+            "Pending": "În Așteptare",
+            "Detected": "Detectat",
             "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)",
             "Error": "Eroare",
             "Could not access camera.": "Nu s-a putut accesa camera.",
@@ -152,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.current_language = "en"
         self.frame_processor = frame_processor
-        self.enabled_kpis = enabled_kpis  # List of enabled KPI names from config
+        self.enabled_kpis = enabled_kpis
         self.static_image = None
         self.mode = "live"
         self.cap = None
@@ -188,31 +189,95 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout = QtWidgets.QVBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         
+        # Title bar
         self.title_bar = TitleBar(self, self.tr)
+        self.title_bar.setStyleSheet("""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2E2E2E, stop:1 #1A1A1A);
+            border-bottom: 1px solid #444444;
+        """)
         self.title_bar.language_combo.currentIndexChanged.connect(self.change_language)
         main_layout.addWidget(self.title_bar)
         
+        # Main content layout
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QHBoxLayout(content_widget)
-        content_layout.setContentsMargins(20, 20, 20, 20)
-        content_layout.setSpacing(30)
+        content_layout.setContentsMargins(15, 15, 15, 15)
+        content_layout.setSpacing(20)
         
-        # Dynamically create left table based on enabled KPIs
-        kpi_labels = [kpi.capitalize().replace("_", " ") for kpi in self.enabled_kpis]
-        self.left_table = KPITable(len(kpi_labels), kpi_labels, self.tr)
-        logging.debug(f"Left table initialized with {self.left_table.rowCount()} rows: {kpi_labels}")
-        content_layout.addWidget(self.left_table, 1)
+        # Left Section: State KPIs
+        left_widget = QtWidgets.QWidget()
+        left_layout = QtWidgets.QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        state_kpis = self.enabled_kpis.get("state", [])
+        self.state_panel = StatePanel(state_kpis, self.tr)
+        left_layout.addWidget(self.state_panel)
+        left_layout.addStretch()
+        content_layout.addWidget(left_widget, 1)
         
+        # Center Section: Video Panel
         self.video_panel = VideoPanel(self, self.tr, self.toggle_mode, self.load_static_image, 
                                       self.analyze_static_image)
-        content_layout.addWidget(self.video_panel, 2)
+        content_layout.addWidget(self.video_panel, 3)
         
-        self.right_table = KPITable(3, ["Adult", "Belt", "Distraction"], self.tr)
-        content_layout.addWidget(self.right_table, 1)
+        # Right Section: Numeric and Binary KPIs
+        right_widget = QtWidgets.QWidget()
+        right_layout = QtWidgets.QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(15)
+        
+        # Top Right: Numeric KPIs
+        numeric_kpis = self.enabled_kpis.get("numeric", [])
+        kpi_labels = [self.tr(kpi.capitalize().replace("_", " ")) for kpi in numeric_kpis]
+        self.numeric_table = KPITable(len(kpi_labels), kpi_labels, self.tr)
+        self.numeric_table.setStyleSheet("""
+            QTableWidget {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2E2E2E, stop:1 #1A1A1A);
+                border: 1px solid #444444;
+                border-radius: 8px;
+                font: 13px "Arial";
+                color: #D3D3D3;
+            }
+            QHeaderView::section {
+                background: #3498DB;
+                color: white;
+                padding: 5px;
+                border: none;
+                font: bold 14px;
+            }
+        """)
+        right_layout.addWidget(self.numeric_table, 2)
+        
+        # Bottom Right: Binary KPIs
+        binary_kpis = self.enabled_kpis.get("binary", [])
+        binary_labels = [self.tr(kpi.capitalize().replace("_", " ")) for kpi in binary_kpis]
+        self.binary_table = KPITable(len(binary_labels), binary_labels, self.tr)
+        self.binary_table.setStyleSheet("""
+            QTableWidget {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2E2E2E, stop:1 #1A1A1A);
+                border: 1px solid #444444;
+                border-radius: 8px;
+                font: 13px "Arial";
+                color: #D3D3D3;
+            }
+            QHeaderView::section {
+                background: #3498DB;
+                color: white;
+                padding: 5px;
+                border: none;
+                font: bold 14px;
+            }
+        """)
+        right_layout.addWidget(self.binary_table, 1)
+        
+        content_layout.addWidget(right_widget, 1)
         
         main_layout.addWidget(content_widget)
         self.setCentralWidget(main_widget)
-        self.setStyleSheet("background-color: #1A252F;")
+        self.setStyleSheet("""
+            QMainWindow {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #333333, stop:1 #1F1F1F);
+            }
+        """)
         
         self.update_mode_ui()
         self.apply_fade_in_animation()
@@ -255,6 +320,7 @@ class MainWindow(QtWidgets.QMainWindow):
             qt_image = QtGui.QImage(rgb_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
             self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
             self.update_kpis(results)
+            self.state_panel.update_states(results)
             self.video_panel.update_video_style(results)
         else:
             logging.error("Failed to read frame from camera.")
@@ -276,6 +342,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
                 self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
                 self.update_kpis({})
+                self.state_panel.update_states({})
     
     def analyze_static_image(self):
         if self.static_image is None:
@@ -297,51 +364,39 @@ class MainWindow(QtWidgets.QMainWindow):
         qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
         self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
         self.update_kpis(results)
+        self.state_panel.update_states(results)
         self.video_panel.update_video_style(results)
     
     def update_kpis(self, results):
-        for i, key in enumerate(self.enabled_kpis):
+        # Numeric KPIs (Top Right Table)
+        for i, key in enumerate(self.enabled_kpis.get("numeric", [])):
             value = results.get(key, "N/A")
-            if isinstance(value, dict):
-                if key == "owl_looking":
-                    value = f"Yaw: {value.get('yaw', 0.0):.2f}, Pitch: {value.get('pitch', 0.0):.2f}, Dist: {value.get('distraction', 'None')}"
-                elif key == "lizard_looking":
-                    value = f"Dir: {value.get('direction', 'None')}, Dist: {value.get('distraction', 'None')}"
-                elif key == "sleep":
-                    if "microsleep" in self.enabled_kpis and i == self.enabled_kpis.index("microsleep"):
-                        value = value.get("microsleep", "N/A")
-                    elif "sleep" in self.enabled_kpis and i == self.enabled_kpis.index("sleep"):
-                        value = value.get("sleep", "N/A")
-                    else:
-                        value = f"Micro: {value.get('microsleep', 'N/A')}, Sleep: {value.get('sleep', 'N/A')}"
-                elif key in ["microsleep", "sleep"]:
-                    value = value.get(key, "N/A")
-            elif isinstance(value, (int, float)):
+            if isinstance(value, (int, float)):
                 value = f"{value:.2f}"
             elif value is None:
                 value = "N/A"
-            item = self.left_table.item(i, 1)
+            item = self.numeric_table.item(i, 1)
             if item is None:
                 item = QtWidgets.QTableWidgetItem("N/A")
                 item.setForeground(QtGui.QColor("white"))
                 item.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.left_table.setItem(i, 1, item)
-                logging.warning(f"Reinitialized missing item at left table row {i}, column 1")
+                self.numeric_table.setItem(i, 1, item)
+                logging.warning(f"Reinitialized missing item at numeric table row {i}, column 1")
             item.setText(str(value))
-            logging.debug(f"Updated KPI {key}: {value}")
+            logging.debug(f"Updated numeric KPI {key}: {value}")
         
-        kpi_keys_right = ["adult", "belt", "distraction"]
-        for i, key in enumerate(kpi_keys_right):
+        # Binary KPIs (Bottom Right Table)
+        for i, key in enumerate(self.enabled_kpis.get("binary", [])):
             value = results.get(key, "N/A")
-            item = self.right_table.item(i, 1)
+            item = self.binary_table.item(i, 1)
             if item is None:
                 item = QtWidgets.QTableWidgetItem("N/A")
                 item.setForeground(QtGui.QColor("white"))
                 item.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.right_table.setItem(i, 1, item)
-                logging.warning(f"Reinitialized missing item at right table row {i}, column 1")
+                self.binary_table.setItem(i, 1, item)
+                logging.warning(f"Reinitialized missing item at binary table row {i}, column 1")
             item.setText(str(value))
-            logging.debug(f"Updated KPI {key}: {value}")
+            logging.debug(f"Updated binary KPI {key}: {value}")
     
     def apply_fade_in_animation(self):
         effect = QtWidgets.QGraphicsOpacityEffect(self)
@@ -361,18 +416,22 @@ class MainWindow(QtWidgets.QMainWindow):
     def retranslate_ui(self):
         self.setWindowTitle(self.tr("Car Face Tracker"))
         self.title_bar.title_label.setText(self.tr("Car Face Tracker"))
-        self.left_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
-        self.right_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
+        self.numeric_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
+        self.binary_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
         self.video_panel.video_label.setText(self.tr("Video Feed"))
         self.video_panel.toggle_mode_btn.setText(self.tr("Switch to Static Mode") if self.mode == "live" else self.tr("Switch to Live Mode"))
         self.video_panel.load_image_btn.setText(self.tr("Load Static Image"))
         self.video_panel.analyze_btn.setText(self.tr("Analyze"))
-        for i, kpi in enumerate(self.enabled_kpis):
+        
+        for i, kpi in enumerate(self.enabled_kpis.get("numeric", [])):
             label = kpi.capitalize().replace("_", " ")
-            self.left_table.item(i, 0).setText(self.tr(label))
-        kpi_keys_right = ["Adult", "Belt", "Distraction"]
-        for i, kpi in enumerate(kpi_keys_right):
-            self.right_table.item(i, 0).setText(self.tr(kpi))
+            self.numeric_table.item(i, 0).setText(self.tr(label))
+        
+        for i, kpi in enumerate(self.enabled_kpis.get("binary", [])):
+            label = kpi.capitalize().replace("_", " ")
+            self.binary_table.item(i, 0).setText(self.tr(label))
+        
+        self.state_panel.retranslate_ui()  # Update state panel translations
         logging.debug("UI retranslated.")
     
     def closeEvent(self, event):
