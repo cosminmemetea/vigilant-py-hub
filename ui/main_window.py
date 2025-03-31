@@ -6,149 +6,10 @@ from ui.title_bar import TitleBar
 from ui.kpi_table import KPITable
 from ui.video_panel import VideoPanel
 from ui.state_panel import StatePanel
-
+from ui.translations import translations
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MainWindow(QtWidgets.QMainWindow):
-    translations = {
-        "en": {
-            "Car Face Tracker": "Car Face Tracker",
-            "KPI": "KPI",
-            "Value": "Value",
-            "Video Feed": "Video Feed",
-            "Switch to Static Mode": "Switch to Static Mode",
-            "Switch to Live Mode": "Switch to Live Mode",
-            "Load Static Image": "Load Static Image",
-            "Analyze": "Analyze",
-            "No Image": "No Image",
-            "Please load a static image first.": "Please load a static image first.",
-            "Yaw": "Yaw",
-            "Pitch": "Pitch",
-            "Roll": "Roll",
-            "Tilt": "Tilt",
-            "Yawn": "Yawn",
-            "Left Eye Openness": "Left Eye Openness",
-            "Right Eye Openness": "Right Eye Openness",
-            "Adult": "Adult",
-            "Belt": "Belt",
-            "Inattention": "Inattention",
-            "Fatigue": "Fatigue",
-            "Microsleep": "Microsleep",
-            "Sleep": "Sleep",
-            "Unresponsive": "Unresponsive",
-            "Drowsiness": "Drowsiness",
-            "None": "None",
-            "Pending": "Pending",
-            "Detected": "Detected",
-            "Image Files (*.png *.jpg *.jpeg)": "Image Files (*.png *.jpg *.jpeg)",
-            "Error": "Error",
-            "Could not access camera.": "Could not access camera.",
-            "Could not load image.": "Could not load image."
-        },
-        "fr": {
-            "Car Face Tracker": "Suivi de Visage en Voiture",
-            "KPI": "Indicateur",
-            "Value": "Valeur",
-            "Video Feed": "Flux Vidéo",
-            "Switch to Static Mode": "Passer en Mode Statique",
-            "Switch to Live Mode": "Passer en Mode Live",
-            "Load Static Image": "Charger une Image Statique",
-            "Analyze": "Analyser",
-            "No Image": "Pas d'Image",
-            "Please load a static image first.": "Veuillez d'abord charger une image statique.",
-            "Yaw": "Lacet",
-            "Pitch": "Tangage",
-            "Roll": "Roulis",
-            "Tilt": "Inclinaison",
-            "Yawn": "Bâillement",
-            "Left Eye Openness": "Ouverture Œil Gauche",
-            "Right Eye Openness": "Ouverture Œil Droit",
-            "Adult": "Adulte",
-            "Belt": "Ceinture",
-            "Inattention": "Inattention",
-            "Fatigue": "Fatigue",
-            "Microsleep": "Microsommeil",
-            "Sleep": "Sommeil",
-            "Unresponsive": "Non Réactif",
-            "Drowsiness": "Somnolence",
-            "None": "Aucun",
-            "Pending": "En Attente",
-            "Detected": "Détecté",
-            "Image Files (*.png *.jpg *.jpeg)": "Fichiers Image (*.png *.jpg *.jpeg)",
-            "Error": "Erreur",
-            "Could not access camera.": "Impossible d'accéder à la caméra.",
-            "Could not load image.": "Impossible de charger l'image."
-        },
-        "de": {
-            "Car Face Tracker": "Autogesichtserkennung",
-            "KPI": "KPI",
-            "Value": "Wert",
-            "Video Feed": "Videostream",
-            "Switch to Static Mode": "Zum Statischen Modus Wechseln",
-            "Switch to Live Mode": "Zum Live-Modus Wechseln",
-            "Load Static Image": "Statisches Bild Laden",
-            "Analyze": "Analysieren",
-            "No Image": "Kein Bild",
-            "Please load a static image first.": "Bitte laden Sie zuerst ein statisches Bild.",
-            "Yaw": "Gieren",
-            "Pitch": "Nicken",
-            "Roll": "Rollen",
-            "Tilt": "Neigung",
-            "Yawn": "Gähnen",
-            "Left Eye Openness": "Linkes Auge Offenheit",
-            "Right Eye Openness": "Rechtes Auge Offenheit",
-            "Adult": "Erwachsener",
-            "Belt": "Gurt",
-            "Inattention": "Unaufmerksamkeit",
-            "Fatigue": "Müdigkeit",
-            "Microsleep": "Mikroschlaf",
-            "Sleep": "Schlaf",
-            "Unresponsive": "Nicht Ansprechbar",
-            "Drowsiness": "Schläfrigkeit",
-            "None": "Kein",
-            "Pending": "Ausstehend",
-            "Detected": "Erkannt",
-            "Image Files (*.png *.jpg *.jpeg)": "Bilddateien (*.png *.jpg *.jpeg)",
-            "Error": "Fehler",
-            "Could not access camera.": "Kamera konnte nicht aufgerufen werden.",
-            "Could not load image.": "Bild konnte nicht geladen werden."
-        },
-        "ro": {
-            "Car Face Tracker": "Urmărire Facială Auto",
-            "KPI": "KPI",
-            "Value": "Valoare",
-            "Video Feed": "Flux Video",
-            "Switch to Static Mode": "Trece la Modul Static",
-            "Switch to Live Mode": "Trece la Modul Live",
-            "Load Static Image": "Încarcă Imagine Statică",
-            "Analyze": "Analizează",
-            "No Image": "Fără Imagine",
-            "Please load a static image first.": "Încarcă mai întâi o imagine statică.",
-            "Yaw": "Gir",
-            "Pitch": "Tangaj",
-            "Roll": "Ruliu",
-            "Tilt": "Înclinare",
-            "Yawn": "Căscat",
-            "Left Eye Openness": "Deschidere Ochi Stâng",
-            "Right Eye Openness": "Deschidere Ochi Drept",
-            "Adult": "Adult",
-            "Belt": "Centură",
-            "Inattention": "Neatenție",
-            "Fatigue": "Oboseală",
-            "Microsleep": "Microsomn",
-            "Sleep": "Somn",
-            "Unresponsive": "Nereceptiv",
-            "Drowsiness": "Somnolență",
-            "None": "Niciunul",
-            "Pending": "În Așteptare",
-            "Detected": "Detectat",
-            "Image Files (*.png *.jpg *.jpeg)": "Fișiere Imagine (*.png *.jpg *.jpeg)",
-            "Error": "Eroare",
-            "Could not access camera.": "Nu s-a putut accesa camera.",
-            "Could not load image.": "Nu s-a putut încărca imaginea."
-        }
-    }
-
     def __init__(self, frame_processor, enabled_kpis):
         super().__init__()
         self.current_language = "en"
@@ -157,7 +18,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.static_image = None
         self.mode = "live"
         self.cap = None
-        
+        self.translations = translations
         self.setup_ui()
         
         self.timer = QtCore.QTimer()
