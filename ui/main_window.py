@@ -3,10 +3,11 @@ import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
 import logging
 from ui.title_bar import TitleBar
-from ui.kpi_table import KPITable
 from ui.video_panel import VideoPanel
-from ui.state_panel import StatePanel
+from ui.kpi_panel import TableKpiPanel, StateKpiPanel
 from ui.translations import translations
+from ui.styles import Styles
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -45,101 +46,43 @@ class MainWindow(QtWidgets.QMainWindow):
     def setup_ui(self):
         self.setWindowTitle(self.tr("Car Face Tracker"))
         self.setMinimumSize(1200, 700)
+        self.setStyleSheet(Styles.MAIN_WINDOW)
         
         main_widget = QtWidgets.QWidget()
         main_layout = QtWidgets.QVBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Title bar
         self.title_bar = TitleBar(self, self.tr)
-        self.title_bar.setStyleSheet("""
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2E2E2E, stop:1 #1A1A1A);
-            border-bottom: 1px solid #444444;
-        """)
-        self.title_bar.language_combo.currentIndexChanged.connect(self.change_language)
         main_layout.addWidget(self.title_bar)
         
-        # Main content layout
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QHBoxLayout(content_widget)
         content_layout.setContentsMargins(15, 15, 15, 15)
         content_layout.setSpacing(20)
         
-        # Left Section: State KPIs
-        left_widget = QtWidgets.QWidget()
-        left_layout = QtWidgets.QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        state_kpis = self.enabled_kpis.get("state", [])
-        self.state_panel = StatePanel(state_kpis, self.tr)
-        left_layout.addWidget(self.state_panel)
-        left_layout.addStretch()
-        content_layout.addWidget(left_widget, 1)
+        self.kpi_panels = {}
+        if "state" in self.enabled_kpis:
+            state_panel = StateKpiPanel(self.enabled_kpis["state"], self.tr, "state")
+            content_layout.addWidget(state_panel, 1)
+            self.kpi_panels["state"] = state_panel
         
-        # Center Section: Video Panel
-        self.video_panel = VideoPanel(self, self.tr, self.toggle_mode, self.load_static_image, 
-                                      self.analyze_static_image)
+        self.video_panel = VideoPanel(self, self.tr, self.toggle_mode, self.load_static_image, self.analyze_static_image)
         content_layout.addWidget(self.video_panel, 3)
         
-        # Right Section: Numeric and Binary KPIs
         right_widget = QtWidgets.QWidget()
         right_layout = QtWidgets.QVBoxLayout(right_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(15)
         
-        # Top Right: Numeric KPIs
-        numeric_kpis = self.enabled_kpis.get("numeric", [])
-        kpi_labels = [self.tr(kpi.capitalize().replace("_", " ")) for kpi in numeric_kpis]
-        self.numeric_table = KPITable(len(kpi_labels), kpi_labels, self.tr)
-        self.numeric_table.setStyleSheet("""
-            QTableWidget {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2E2E2E, stop:1 #1A1A1A);
-                border: 1px solid #444444;
-                border-radius: 8px;
-                font: 13px "Arial";
-                color: #D3D3D3;
-            }
-            QHeaderView::section {
-                background: #3498DB;
-                color: white;
-                padding: 5px;
-                border: none;
-                font: bold 14px;
-            }
-        """)
-        right_layout.addWidget(self.numeric_table, 2)
-        
-        # Bottom Right: Binary KPIs
-        binary_kpis = self.enabled_kpis.get("binary", [])
-        binary_labels = [self.tr(kpi.capitalize().replace("_", " ")) for kpi in binary_kpis]
-        self.binary_table = KPITable(len(binary_labels), binary_labels, self.tr)
-        self.binary_table.setStyleSheet("""
-            QTableWidget {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2E2E2E, stop:1 #1A1A1A);
-                border: 1px solid #444444;
-                border-radius: 8px;
-                font: 13px "Arial";
-                color: #D3D3D3;
-            }
-            QHeaderView::section {
-                background: #3498DB;
-                color: white;
-                padding: 5px;
-                border: none;
-                font: bold 14px;
-            }
-        """)
-        right_layout.addWidget(self.binary_table, 1)
+        for group in self.enabled_kpis.keys() - {"state"}:
+            panel = TableKpiPanel(self.enabled_kpis[group], self.tr, group)
+            right_layout.addWidget(panel, 2 if group == "numeric" else 1)
+            self.kpi_panels[group] = panel
         
         content_layout.addWidget(right_widget, 1)
         
         main_layout.addWidget(content_widget)
         self.setCentralWidget(main_widget)
-        self.setStyleSheet("""
-            QMainWindow {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #333333, stop:1 #1F1F1F);
-            }
-        """)
-        
         self.update_mode_ui()
         self.apply_fade_in_animation()
     
@@ -172,16 +115,14 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         ret, frame = self.cap.read()
         if ret:
-            logging.debug(f"Frame received: {frame.shape}")
             results = self.frame_processor.process_frame(frame)
-            logging.debug(f"Live video results: {results}")
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_frame.shape
             bytes_per_line = ch * w
             qt_image = QtGui.QImage(rgb_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
             self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
-            self.update_kpis(results)
-            self.state_panel.update_states(results)
+            for panel in self.kpi_panels.values():
+                panel.update_values(results)
             self.video_panel.update_video_style(results)
         else:
             logging.error("Failed to read frame from camera.")
@@ -202,8 +143,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 bytes_per_line = ch * w
                 qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
                 self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
-                self.update_kpis({})
-                self.state_panel.update_states({})
+                for panel in self.kpi_panels.values():
+                    panel.update_values({})
     
     def analyze_static_image(self):
         if self.static_image is None:
@@ -218,46 +159,14 @@ class MainWindow(QtWidgets.QMainWindow):
             "min_tracking_confidence": 0.5
         })
         results = self.frame_processor.process_frame(self.static_image)
-        logging.debug(f"Static image analysis results: {results}")
         rgb_image = cv2.cvtColor(self.static_image, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
         qt_image = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
         self.video_panel.video_label.setPixmap(QtGui.QPixmap.fromImage(qt_image))
-        self.update_kpis(results)
-        self.state_panel.update_states(results)
+        for panel in self.kpi_panels.values():
+            panel.update_values(results)
         self.video_panel.update_video_style(results)
-    
-    def update_kpis(self, results):
-        # Numeric KPIs (Top Right Table)
-        for i, key in enumerate(self.enabled_kpis.get("numeric", [])):
-            value = results.get(key, "N/A")
-            if isinstance(value, (int, float)):
-                value = f"{value:.2f}"
-            elif value is None:
-                value = "N/A"
-            item = self.numeric_table.item(i, 1)
-            if item is None:
-                item = QtWidgets.QTableWidgetItem("N/A")
-                item.setForeground(QtGui.QColor("white"))
-                item.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.numeric_table.setItem(i, 1, item)
-                logging.warning(f"Reinitialized missing item at numeric table row {i}, column 1")
-            item.setText(str(value))
-            logging.debug(f"Updated numeric KPI {key}: {value}")
-        
-        # Binary KPIs (Bottom Right Table)
-        for i, key in enumerate(self.enabled_kpis.get("binary", [])):
-            value = results.get(key, "N/A")
-            item = self.binary_table.item(i, 1)
-            if item is None:
-                item = QtWidgets.QTableWidgetItem("N/A")
-                item.setForeground(QtGui.QColor("white"))
-                item.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.binary_table.setItem(i, 1, item)
-                logging.warning(f"Reinitialized missing item at binary table row {i}, column 1")
-            item.setText(str(value))
-            logging.debug(f"Updated binary KPI {key}: {value}")
     
     def apply_fade_in_animation(self):
         effect = QtWidgets.QGraphicsOpacityEffect(self)
@@ -277,23 +186,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def retranslate_ui(self):
         self.setWindowTitle(self.tr("Car Face Tracker"))
         self.title_bar.title_label.setText(self.tr("Car Face Tracker"))
-        self.numeric_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
-        self.binary_table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
         self.video_panel.video_label.setText(self.tr("Video Feed"))
         self.video_panel.toggle_mode_btn.setText(self.tr("Switch to Static Mode") if self.mode == "live" else self.tr("Switch to Live Mode"))
         self.video_panel.load_image_btn.setText(self.tr("Load Static Image"))
         self.video_panel.analyze_btn.setText(self.tr("Analyze"))
-        
-        for i, kpi in enumerate(self.enabled_kpis.get("numeric", [])):
-            label = kpi.capitalize().replace("_", " ")
-            self.numeric_table.item(i, 0).setText(self.tr(label))
-        
-        for i, kpi in enumerate(self.enabled_kpis.get("binary", [])):
-            label = kpi.capitalize().replace("_", " ")
-            self.binary_table.item(i, 0).setText(self.tr(label))
-        
-        self.state_panel.retranslate_ui()  # Update state panel translations
-        logging.debug("UI retranslated.")
+        for panel in self.kpi_panels.values():
+            panel.retranslate_ui()
     
     def closeEvent(self, event):
         if hasattr(self, 'timer'):

@@ -1,5 +1,6 @@
 # kpi/kpi_manager.py
 import logging
+from typing import Dict, Any
 
 class KpiManager:
     def __init__(self):
@@ -10,13 +11,9 @@ class KpiManager:
         self.calculators.append(calculator)
         logging.debug(f"Calculator registered: {calculator.name()}")
     
-    def calculate(self, landmarks, image_size, frame):
+    def calculate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         results = {}
         for calculator in self.calculators:
             logging.debug(f"Executing calculator: {calculator.name()}")
-            result = calculator.calculate(landmarks, image_size, frame)
-            if isinstance(result, dict):
-                results.update(result)
-            else:
-                results[calculator.name()] = result
+            results[calculator.name()] = calculator.calculate(data)
         return results

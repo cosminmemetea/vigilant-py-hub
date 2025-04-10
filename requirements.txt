@@ -3,7 +3,7 @@ opencv-python==4.10.0.84      # Image processing and video capture
 mediapipe==0.10.14            # Face detection and landmark tracking
 PyQt5==5.15.11                # GUI framework for responsive UI
 numpy==2.0.2                  # Numerical computations for KPI calculations
-
+pydantic==2.7.1
 # Optional dependencies (uncomment if needed in the future)
 # tensorflow==2.15.0          # For future .h5 model integration (e.g., Adult/Belt prediction)
 # pyyaml==6.0.1               # For YAML config parsing (if you switch to YAML)

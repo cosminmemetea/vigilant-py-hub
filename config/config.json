@@ -6,21 +6,9 @@
     "min_tracking_confidence": 0.5
   },
   "kpis": [
-    {"name": "yaw", "enabled": true, "group": "numeric"},
-    {"name": "pitch", "enabled": true, "group": "numeric"},
-    {"name": "roll", "enabled": true, "group": "numeric"},
-    {"name": "yawn", "enabled": true, "group": "numeric"},
-    {"name": "owl_looking", "enabled": true, "group": "state"},
-    {"name": "lizard_looking", "enabled": false, "group": "state"},
-    {"name": "left_eye_openness", "enabled": true, "group": "numeric"},
-    {"name": "right_eye_openness", "enabled": true, "group": "numeric"},
-    {"name": "adult", "enabled": true, "group": "binary"},
-    {"name": "belt", "enabled": true, "group": "binary"},
-    {"name": "inattention", "enabled": false, "group": "state"},
-    {"name": "fatigue", "enabled": true, "group": "state"},
-    {"name": "microsleep", "enabled": true, "group": "state"},
-    {"name": "sleep", "enabled": true, "group": "state"},
-    {"name": "unresponsive", "enabled": true, "group": "state"},
-    {"name": "drowsiness", "enabled": false, "group": "state"}
+    {"name": "yaw", "enabled": true, "group": "numeric", "params": {"threshold": 30}},
+    {"name": "pitch", "enabled": true, "group": "numeric", "params": {"threshold": 20}},
+    {"name": "roll", "enabled": true, "group": "numeric", "params": {"threshold": 25}},
+    {"name": "yawn", "enabled": true, "group": "numeric", "params": {"min_width": 0.5}}
   ]
 }

@@ -1,4 +1,4 @@
-import json
+from config.config_loader import load_config
 from adapters.mediapipe_adapter import MediaPipeAdapter
 from kpi.kpi_factory import KpiFactory
 from kpi.kpi_manager import KpiManager
@@ -11,14 +11,13 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 class AppController:
     def __init__(self, config_path="config/config.json"):
         logging.info("Initializing AppController...")
-        with open(config_path, "r") as f:
-            self.config = json.load(f)
-            logging.debug(f"Configuration loaded: {self.config}")
+        self.config = load_config(config_path)
+        logging.debug(f"Configuration loaded: {self.config.dict()}")
         
-        self.mediapipe_adapter = MediaPipeAdapter(mode="live", config=self.config.get("mediapipe", {}))
+        self.mediapipe_adapter = MediaPipeAdapter(mode="live", config=self.config.mediapipe)
         logging.debug("MediaPipeAdapter initialized.")
         
-        kpi_factory = KpiFactory(self.config)
+        kpi_factory = KpiFactory(self.config.dict())
         calculators = kpi_factory.create_calculators()
         logging.debug(f"Calculators created: {[calc.name() for calc in calculators]}")
         
@@ -30,12 +29,13 @@ class AppController:
         self.frame_processor = FrameProcessor(self.mediapipe_adapter, self.kpi_manager)
         logging.debug("FrameProcessor initialized.")
         
-        # Group enabled KPIs by category
-        enabled_kpis = {
-            "numeric": [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True) and kpi.get("group") == "numeric"],
-            "binary": [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True) and kpi.get("group") == "binary"],
-            "state": [kpi["name"] for kpi in self.config.get("kpis", []) if kpi.get("enabled", True) and kpi.get("group") == "state"]
-        }
+        # Dynamically group enabled KPIs by their group attribute
+        enabled_kpis = {}
+        for calc in calculators:
+            group = calc.group()
+            if group not in enabled_kpis:
+                enabled_kpis[group] = []
+            enabled_kpis[group].append(calc.name())
         self.main_window = MainWindow(self.frame_processor, enabled_kpis)
         logging.info("AppController successfully initialized.")
     

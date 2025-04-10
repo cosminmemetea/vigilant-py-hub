@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-import cv2
 import logging
+from ui.styles import Styles
 
 class VideoPanel(QtWidgets.QWidget):
     def __init__(self, parent, tr_func, toggle_mode_cb, load_image_cb, analyze_cb):
@@ -29,65 +29,27 @@ class VideoPanel(QtWidgets.QWidget):
         btn_layout.addWidget(self.analyze_btn)
         
         layout.addLayout(btn_layout)
-        self.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2E2E2E, stop:1 #1A1A1A); border-radius: 10px;")
+        self.setStyleSheet(Styles.VIDEO_PANEL)
         logging.debug("VideoPanel initialized.")
     
     def create_button(self, text, callback, enabled=True, color="#3498DB", hover_color="#2980B9"):
         button = QtWidgets.QPushButton(self.tr(text))
-        button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {color};
-                border-radius: 6px;
-                padding: 8px 16px;
-                font: bold 12px "Arial";
-                color: white;
-                border: 1px solid #444444;
-            }}
-            QPushButton:disabled {{
-                background-color: #7F8C8D;
-            }}
-            QPushButton:hover:enabled {{
-                background-color: {hover_color};
-            }}
-            QPushButton:pressed {{
-                background-color: {hover_color};
-                border: 1px solid #555555;
-            }}
-        """)
+        button.setStyleSheet(Styles.BUTTON(color=color, hover_color=hover_color))  # Corrected call
         button.clicked.connect(callback)
         button.setEnabled(enabled)
         return button
     
     def set_default_style(self):
-        self.video_label.setStyleSheet("""
-            background-color: #1C2526;
-            border: 2px solid #3498DB;
-            border-radius: 12px;
-            font: bold 16px "Arial";
-            color: #ECF0F1;
-        """)
+        self.video_label.setStyleSheet(Styles.VIDEO_LABEL_DEFAULT)
     
     def update_video_style(self, results):
-        for key, value in results.items():
-            if isinstance(value, str):
-                if value.startswith("Detected"):
-                    self.video_label.setStyleSheet("""
-                        background-color: #1C2526;
-                        border: 2px solid #E74C3C;
-                        border-radius: 12px;
-                        font: bold 16px "Arial";
-                        color: #ECF0F1;
-                    """)
-                    return
+        for value in results.values():
+            if isinstance(value, str) and value.startswith("Detected"):
+                self.video_label.setStyleSheet(Styles.VIDEO_LABEL_ALERT)
+                return
             elif isinstance(value, dict):
-                for sub_key, sub_value in value.items():
-                    if sub_value == "Detected" or sub_value in ["Long", "VATS"]:
-                        self.video_label.setStyleSheet("""
-                            background-color: #1C2526;
-                            border: 2px solid #E74C3C;
-                            border-radius: 12px;
-                            font: bold 16px "Arial";
-                            color: #ECF0F1;
-                        """)
+                for sub_value in value.values():
+                    if sub_value == "Detected":
+                        self.video_label.setStyleSheet(Styles.VIDEO_LABEL_ALERT)
                         return
         self.set_default_style()

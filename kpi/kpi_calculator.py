@@ -1,9 +1,16 @@
 # kpi/kpi_calculator.py
-import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict
 
-class KpiCalculator:
+class KpiCalculator(ABC):
+    @abstractmethod
     def name(self) -> str:
-        raise NotImplementedError("Subclasses must implement name()")
-    
-    def calculate(self, landmarks, image_size, frame=None):
-        raise NotImplementedError("Subclasses must implement calculate()")
+        pass
+
+    @abstractmethod
+    def group(self) -> str:
+        pass
+
+    @abstractmethod
+    def calculate(self, data: Dict[str, Any]) -> Any:
+        pass
