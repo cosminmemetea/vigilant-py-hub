@@ -49,13 +49,13 @@ class TableKpiPanel(KpiPanel):
             value = results.get(kpi, "N/A")
             if isinstance(value, (int, float)):
                 value = f"{value:.2f}"
-            item = self.table.item(i, 1)  # Get existing item
-            if item is None:  # Shouldn't happen, but safeguard
+            item = self.table.item(i, 1)
+            if item is None:
                 item = QtWidgets.QTableWidgetItem("N/A")
                 item.setForeground(QtGui.QColor("white"))
                 item.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.setItem(i, 1, item)
-            item.setText(str(value))  # Update text directly
+            item.setText(str(value))
             logging.debug(f"Updated {self.group} KPI {kpi}: {value}")
 
     def retranslate_ui(self):

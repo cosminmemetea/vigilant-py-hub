@@ -6,6 +6,7 @@ class VideoPanel(QtWidgets.QWidget):
     def __init__(self, parent, tr_func, toggle_mode_cb, load_image_cb, analyze_cb):
         super().__init__(parent)
         self.tr = tr_func
+        self.toggle_callback = toggle_mode_cb
         layout = QtWidgets.QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -34,7 +35,7 @@ class VideoPanel(QtWidgets.QWidget):
     
     def create_button(self, text, callback, enabled=True, color="#3498DB", hover_color="#2980B9"):
         button = QtWidgets.QPushButton(self.tr(text))
-        button.setStyleSheet(Styles.BUTTON(color=color, hover_color=hover_color))  # Corrected call
+        button.setStyleSheet(Styles.BUTTON(color=color, hover_color=hover_color))
         button.clicked.connect(callback)
         button.setEnabled(enabled)
         return button
@@ -53,3 +54,9 @@ class VideoPanel(QtWidgets.QWidget):
                         self.video_label.setStyleSheet(Styles.VIDEO_LABEL_ALERT)
                         return
         self.set_default_style()
+    
+    def retranslate_ui(self):  # Added to update dynamically
+        self.video_label.setText(self.tr("Video Feed"))
+        self.toggle_mode_btn.setText(self.tr("Switch to Static Mode") if self.toggle_callback.__self__.mode == "live" else self.tr("Switch to Live Mode"))
+        self.load_image_btn.setText(self.tr("Load Static Image"))
+        self.analyze_btn.setText(self.tr("Analyze"))

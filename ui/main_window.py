@@ -53,6 +53,7 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
         
         self.title_bar = TitleBar(self, self.tr)
+        self.title_bar.language_combo.currentIndexChanged.connect(self.change_language)  # Connect signal
         main_layout.addWidget(self.title_bar)
         
         content_widget = QtWidgets.QWidget()
