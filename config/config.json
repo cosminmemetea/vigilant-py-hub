@@ -10,7 +10,7 @@
     {"name": "pitch", "enabled": true, "group": "numeric"},
     {"name": "roll", "enabled": true, "group": "numeric"},
     {"name": "yawn", "enabled": true, "group": "numeric"},
-    {"name": "owl_looking", "enabled": false, "group": "state"},
+    {"name": "owl_looking", "enabled": true, "group": "state"},
     {"name": "lizard_looking", "enabled": false, "group": "state"},
     {"name": "left_eye_openness", "enabled": true, "group": "numeric"},
     {"name": "right_eye_openness", "enabled": true, "group": "numeric"},
