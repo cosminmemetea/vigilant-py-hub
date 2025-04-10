@@ -8,7 +8,6 @@
   "kpis": [
     {"name": "yaw", "enabled": true, "group": "numeric", "params": {"threshold": 30}},
     {"name": "pitch", "enabled": true, "group": "numeric", "params": {"threshold": 20}},
-    {"name": "roll", "enabled": true, "group": "numeric", "params": {"threshold": 25}},
-    {"name": "yawn", "enabled": true, "group": "numeric", "params": {"min_width": 0.5}}
+    {"name": "roll", "enabled": true, "group": "numeric", "params": {"threshold": 25}}
   ]
 }
