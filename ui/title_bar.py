@@ -17,7 +17,8 @@ class TitleBar(QtWidgets.QWidget):
         layout.addStretch()
         
         self.language_combo = QtWidgets.QComboBox()
-        base_path = os.path.dirname(__file__)
+        # Correct the base_path to join the directory of this file with the 'flags' folder
+        base_path = os.path.join(os.path.dirname(__file__), 'flags')
         self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "gb.svg")), "en")
         self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "fr.svg")), "fr")
         self.language_combo.addItem(QtGui.QIcon(os.path.join(base_path, "de.svg")), "de")
