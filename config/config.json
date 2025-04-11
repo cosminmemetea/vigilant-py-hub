@@ -10,6 +10,8 @@
     {"name": "pitch", "enabled": true, "group": "numeric", "params": {"threshold": 20}},
     {"name": "roll", "enabled": true, "group": "numeric", "params": {"threshold": 25}},
     {"name": "left_eye_openness", "enabled": true, "group": "numeric", "params": {"threshold": 0.3}},
-    {"name": "right_eye_openness", "enabled": true, "group": "numeric", "params": {"threshold": 0.3}}
+    {"name": "right_eye_openness", "enabled": true, "group": "numeric", "params": {"threshold": 0.3}},
+    {"name": "mouth_openness", "enabled": true, "group": "numeric", "params": {}},
+    {"name": "yawn", "enabled": true, "group": "state", "params": {"openness_threshold": 0.5}}
   ]
 }
