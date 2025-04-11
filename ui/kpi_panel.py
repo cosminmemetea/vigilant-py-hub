@@ -1,3 +1,4 @@
+# ui/kpi_panel.py
 from PyQt5 import QtWidgets, QtGui, QtCore
 import logging
 from typing import List, Dict, Any
@@ -31,7 +32,9 @@ class TableKpiPanel(KpiPanel):
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for i, kpi in enumerate(self.kpis):
-            kpi_item = QtWidgets.QTableWidgetItem(self.tr(kpi.capitalize().replace("_", " ")))
+            # Convert KPI key to a human-readable format that matches translation keys
+            label = kpi.replace("_", " ").title()
+            kpi_item = QtWidgets.QTableWidgetItem(self.tr(label))
             kpi_item.setForeground(QtGui.QColor("white"))
             kpi_item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.table.setItem(i, 0, kpi_item)
@@ -39,6 +42,7 @@ class TableKpiPanel(KpiPanel):
             value_item.setForeground(QtGui.QColor("white"))
             value_item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.table.setItem(i, 1, value_item)
+            logging.debug(f"Setup KPI {kpi} as '{self.tr(label)}'")
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.table)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -61,8 +65,14 @@ class TableKpiPanel(KpiPanel):
     def retranslate_ui(self):
         self.table.setHorizontalHeaderLabels([self.tr("KPI"), self.tr("Value")])
         for i, kpi in enumerate(self.kpis):
-            label = kpi.capitalize().replace("_", " ")
-            self.table.item(i, 0).setText(self.tr(label))
+            label = kpi.replace("_", " ").title()
+            translated_label = self.tr(label)
+            item = self.table.item(i, 0)
+            if item:
+                item.setText(translated_label)
+                logging.debug(f"Retranslated {kpi} to '{translated_label}'")
+            else:
+                logging.warning(f"Item at row {i} not found during retranslation for {kpi}")
 
 class StateKpiPanel(KpiPanel):
     def __init__(self, kpis: List[str], tr_func, group: str):
@@ -76,7 +86,9 @@ class StateKpiPanel(KpiPanel):
         table_layout.setColumnMinimumWidth(1, 120)
         self.state_labels = {}
         for i, kpi in enumerate(self.kpis):
-            name_label = QtWidgets.QLabel(self.tr(kpi.capitalize().replace("_", " ")))
+            # Use title-case for the KPI name to match the translation dictionary
+            translated_name = self.tr(kpi.replace("_", " ").title())
+            name_label = QtWidgets.QLabel(translated_name)
             name_label.setStyleSheet(Styles.STATE_NAME_LABEL)
             table_layout.addWidget(name_label, i, 0, alignment=QtCore.Qt.AlignLeft)
             state_label = QtWidgets.QLabel(self.tr("None"))
@@ -84,6 +96,7 @@ class StateKpiPanel(KpiPanel):
             state_label.setStyleSheet(Styles.STATE_VALUE_DEFAULT)
             table_layout.addWidget(state_label, i, 1, alignment=QtCore.Qt.AlignRight)
             self.state_labels[kpi] = state_label
+            logging.debug(f"Setup state KPI {kpi} as '{translated_name}'")
         self.table.setStyleSheet(Styles.STATE_PANEL)
         layout.addWidget(self.table)
         layout.addStretch()
@@ -103,8 +116,11 @@ class StateKpiPanel(KpiPanel):
 
     def retranslate_ui(self):
         for i, kpi in enumerate(self.kpis):
+            translated_name = self.tr(kpi.replace("_", " ").title())
             name_label = self.table.layout().itemAtPosition(i, 0).widget()
+            name_label.setText(translated_name)
             state_label = self.state_labels[kpi]
-            name_label.setText(self.tr(kpi.capitalize().replace("_", " ")))
             current_state = state_label.text()
-            state_label.setText(self.tr(current_state))
+            translated_state = self.tr(current_state)
+            state_label.setText(translated_state)
+            logging.debug(f"Retranslated state KPI {kpi} to '{translated_name}', state to '{translated_state}'")

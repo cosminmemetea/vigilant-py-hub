@@ -1,3 +1,4 @@
+# ui/main_window.py
 import cv2
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -28,7 +29,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.initialize_camera()
 
     def tr(self, text):
-        return self.translations.get(self.current_language, {}).get(text, text)
+        translated = self.translations.get(self.current_language, {}).get(text, text)
+        logging.debug(f"Translating '{text}' to '{translated}' for language '{self.current_language}'")
+        return translated
     
     def initialize_camera(self):
         if self.cap is not None and self.cap.isOpened():
@@ -52,8 +55,8 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout = QtWidgets.QVBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.title_bar = TitleBar(self, self.tr)
-        self.title_bar.language_combo.currentIndexChanged.connect(self.change_language)  # Connect signal
+        self.title_bar = TitleBar(self, lambda x: self.tr(x))  # Pass dynamic tr function
+        self.title_bar.language_combo.currentIndexChanged.connect(self.change_language)
         main_layout.addWidget(self.title_bar)
         
         content_widget = QtWidgets.QWidget()
@@ -63,11 +66,11 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.kpi_panels = {}
         if "state" in self.enabled_kpis:
-            state_panel = StateKpiPanel(self.enabled_kpis["state"], self.tr, "state")
+            state_panel = StateKpiPanel(self.enabled_kpis["state"], lambda x: self.tr(x), "state")
             content_layout.addWidget(state_panel, 1)
             self.kpi_panels["state"] = state_panel
         
-        self.video_panel = VideoPanel(self, self.tr, self.toggle_mode, self.load_static_image, self.analyze_static_image)
+        self.video_panel = VideoPanel(self, lambda x: self.tr(x), self.toggle_mode, self.load_static_image, self.analyze_static_image)
         content_layout.addWidget(self.video_panel, 3)
         
         right_widget = QtWidgets.QWidget()
@@ -76,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
         right_layout.setSpacing(15)
         
         for group in self.enabled_kpis.keys() - {"state"}:
-            panel = TableKpiPanel(self.enabled_kpis[group], self.tr, group)
+            panel = TableKpiPanel(self.enabled_kpis[group], lambda x: self.tr(x), group)
             right_layout.addWidget(panel, 2 if group == "numeric" else 1)
             self.kpi_panels[group] = panel
         
@@ -181,18 +184,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def change_language(self, index):
         languages = ["en", "fr", "de", "ro"]
         self.current_language = languages[index]
+        logging.debug(f"Language changing to {self.current_language}")
         self.retranslate_ui()
         logging.info(f"Language changed to {self.current_language}")
     
     def retranslate_ui(self):
         self.setWindowTitle(self.tr("Car Face Tracker"))
         self.title_bar.title_label.setText(self.tr("Car Face Tracker"))
-        self.video_panel.video_label.setText(self.tr("Video Feed"))
-        self.video_panel.toggle_mode_btn.setText(self.tr("Switch to Static Mode") if self.mode == "live" else self.tr("Switch to Live Mode"))
-        self.video_panel.load_image_btn.setText(self.tr("Load Static Image"))
-        self.video_panel.analyze_btn.setText(self.tr("Analyze"))
+        self.video_panel.retranslate_ui()  # Explicitly call subcomponent retranslate
         for panel in self.kpi_panels.values():
             panel.retranslate_ui()
+        logging.debug("MainWindow UI retranslated")
     
     def closeEvent(self, event):
         if hasattr(self, 'timer'):
